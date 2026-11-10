@@ -5,7 +5,7 @@ export default function StatusBadge({ status }: { status: Status }) {
   const { label, className } = statusStyles[status] ?? { label: status, className: 'bg-hover text-muted' }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs transition-colors duration-300 ${className}`}>
+    <span className={`inline-block rounded-[6px] px-2.5 py-0.5 text-xs transition-colors duration-300 ${className}`}>
       {label}
     </span>
   )

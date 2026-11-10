@@ -13,9 +13,10 @@
   --color-field: #8f8e89; /* outlines of fields and outlined buttons: at least 3.2:1 */
   --color-hover: #efefed;
 
-  /* Brand color: main buttons, unread markers. White text on it is 6.8:1 (8.9:1 on hover) */
-  --color-brand: #3e4acf;
-  --color-brand-hover: #323ca8;
+  /* Brand color: main buttons, unread markers. White text on it is 17.8:1.
+     Hover lightens slightly (black can't get darker) and keeps 12.6:1 */
+  --color-brand: #181818;
+  --color-brand-hover: #333333;
 
   /* Chart colors, in a fixed order checked for color-blind safety on the page background.
      Every one reaches 3:1 against the page; charts also have a legend and a table view. */

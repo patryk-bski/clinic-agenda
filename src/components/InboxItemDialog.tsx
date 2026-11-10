@@ -1,8 +1,8 @@
-import { ArrowDown, ArrowUp, CornerUpLeft } from 'lucide-react'
+import { ArrowDown, ArrowUp } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState, type FormEvent } from 'react'
 import type { InboxItem } from '../data'
-import { inboxKinds, longTime } from '../inbox'
+import { inboxKinds, longTime, responses } from '../inbox'
 import { fade } from '../motion'
 import Modal from './Modal'
 
@@ -12,20 +12,23 @@ type Props = {
   item: InboxItem
   now: Date
   onMarkUnread: () => void
-  onReply: (body: string) => void
+  onReply: (to: string, body: string) => void
   onClose: () => void
 }
 
 export default function InboxItemDialog({ item, now, onMarkUnread, onReply, onClose }: Props) {
   const { label, icon: Icon } = inboxKinds[item.kind]
-  const canReply = item.kind === 'message'
+  // Reply to the sender, or for lab results message the patient
+  const response = responses[item.kind]
+  const ResponseIcon = response.icon
+  const recipient = response.recipient(item)
   const [isReplying, setIsReplying] = useState(false)
   const [draft, setDraft] = useState('')
 
   function send(e: FormEvent) {
     e.preventDefault()
     if (!draft.trim()) return
-    onReply(draft.trim())
+    onReply(recipient, draft.trim())
     setDraft('')
     setIsReplying(false)
   }
@@ -83,12 +86,12 @@ export default function InboxItemDialog({ item, now, onMarkUnread, onReply, onCl
         </table>
       )}
 
-      {/* Replies sent from this popup, oldest first */}
+      {/* What you've sent from this popup, oldest first */}
       {item.replies?.map((reply, i) => (
         <div key={i} className="mt-5 rounded-lg border border-line bg-white p-4 text-sm">
           <p className="mb-2 flex items-center gap-1.5 text-xs text-muted">
-            <CornerUpLeft size={12} strokeWidth={2} />
-            You replied at {time(reply.sentAt)}
+            <ResponseIcon size={12} strokeWidth={2} />
+            {response.sent} {reply.to} at {time(reply.sentAt)}
           </p>
           <p className="whitespace-pre-line">{reply.body}</p>
         </div>
@@ -99,7 +102,7 @@ export default function InboxItemDialog({ item, now, onMarkUnread, onReply, onCl
         {isReplying ? (
           <motion.form key="reply" onSubmit={send} className="mt-6" {...fade}>
             <label className="block text-sm">
-              Reply to {item.from}
+              {item.kind === 'lab' ? 'Message' : 'Reply to'} {recipient}
               <textarea
                 autoFocus
                 rows={5}
@@ -109,7 +112,7 @@ export default function InboxItemDialog({ item, now, onMarkUnread, onReply, onCl
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) send(e)
                 }}
-                placeholder="Write your reply…"
+                placeholder={item.kind === 'lab' ? 'Write to the patient about this result…' : 'Write your reply…'}
                 className="mt-1.5 w-full resize-y rounded-[6px] border border-field bg-white px-2.5 py-2 text-sm transition-colors placeholder:text-muted focus:border-ink focus:outline-none"
               />
             </label>
@@ -126,7 +129,7 @@ export default function InboxItemDialog({ item, now, onMarkUnread, onReply, onCl
                 disabled={!draft.trim()}
                 className="rounded-[6px] bg-brand px-3 py-2 text-sm text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Send reply
+                {item.kind === 'lab' ? 'Send message' : 'Send reply'}
               </button>
             </div>
           </motion.form>
@@ -141,22 +144,19 @@ export default function InboxItemDialog({ item, now, onMarkUnread, onReply, onCl
             </button>
             <div className="flex gap-2">
               <button
-                autoFocus={!canReply}
                 onClick={onClose}
                 className="rounded-[6px] bg-hover px-3 py-2 text-sm transition-colors hover:bg-line"
               >
                 Close
               </button>
-              {canReply && (
-                <button
-                  autoFocus
-                  onClick={() => setIsReplying(true)}
-                  className="flex items-center gap-1.5 rounded-[6px] bg-brand px-3 py-2 text-sm text-white transition-colors hover:bg-brand-hover"
-                >
-                  <CornerUpLeft size={15} strokeWidth={1.75} />
-                  Reply
-                </button>
-              )}
+              <button
+                autoFocus
+                onClick={() => setIsReplying(true)}
+                className="flex items-center gap-1.5 rounded-[6px] bg-brand px-3 py-2 text-sm text-white transition-colors hover:bg-brand-hover"
+              >
+                <ResponseIcon size={15} strokeWidth={1.75} />
+                {response.button}
+              </button>
             </div>
           </motion.div>
         )}

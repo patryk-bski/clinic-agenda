@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import type { Patient } from '../data'
@@ -21,6 +21,62 @@ function formatDate(date: string) {
   return toLocalDate(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+type SortKey = 'name' | 'age' | 'lastVisit'
+type Sort = { key: SortKey; direction: 'asc' | 'desc' }
+
+// How each column orders patients when sorted ascending
+const compare: Record<SortKey, (a: Patient, b: Patient) => number> = {
+  name: (a, b) => a.name.localeCompare(b.name), // A to Z
+  age: (a, b) => b.dateOfBirth.localeCompare(a.dateOfBirth), // youngest first
+  lastVisit: (a, b) => a.lastVisit.localeCompare(b.lastVisit), // oldest first
+}
+
+// The direction a column starts in when you first click it
+const firstDirection: Record<SortKey, Sort['direction']> = {
+  name: 'asc', // A to Z
+  age: 'asc', // youngest first
+  lastVisit: 'desc', // most recent first
+}
+
+// Words for screen readers, e.g. "Sorted by last visit, most recent first"
+const directionWords: Record<SortKey, Record<Sort['direction'], string>> = {
+  name: { asc: 'A to Z', desc: 'Z to A' },
+  age: { asc: 'youngest first', desc: 'oldest first' },
+  lastVisit: { asc: 'oldest first', desc: 'most recent first' },
+}
+
+// A column label that sorts the list when clicked
+function SortButton({
+  column,
+  label,
+  sort,
+  onSort,
+}: {
+  column: SortKey
+  label: string
+  sort: Sort
+  onSort: (column: SortKey) => void
+}) {
+  const isActive = sort.key === column
+  const Arrow = !isActive ? ArrowUpDown : sort.direction === 'asc' ? ArrowUp : ArrowDown
+  return (
+    <button
+      onClick={() => onSort(column)}
+      aria-label={
+        isActive
+          ? `Sort by ${label.toLowerCase()}. Sorted ${directionWords[column][sort.direction]}`
+          : `Sort by ${label.toLowerCase()}`
+      }
+      className={`-mx-1 flex items-center gap-1 rounded px-1 transition-colors hover:text-ink ${
+        isActive ? 'font-medium text-ink' : ''
+      }`}
+    >
+      {label}
+      <Arrow size={12} strokeWidth={2} aria-hidden className={isActive ? '' : 'opacity-50'} />
+    </button>
+  )
+}
+
 type Props = {
   patients: Patient[]
   onSelect: (patient: Patient) => void
@@ -28,9 +84,21 @@ type Props = {
 
 export default function PatientsPage({ patients, onSelect }: Props) {
   const [query, setQuery] = useState('')
-  const matches = patients.filter((patient) =>
-    patient.name.toLowerCase().includes(query.trim().toLowerCase()),
-  )
+  const [sort, setSort] = useState<Sort>({ key: 'name', direction: 'asc' })
+
+  const matches = patients
+    .filter((patient) => patient.name.toLowerCase().includes(query.trim().toLowerCase()))
+    .sort((a, b) => compare[sort.key](a, b) * (sort.direction === 'asc' ? 1 : -1))
+
+  // Clicking the current column flips its order; clicking another column starts it fresh
+  function sortBy(key: SortKey) {
+    setSort((current) =>
+      current.key === key
+        ? { key, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+        : { key, direction: firstDirection[key] },
+    )
+  }
+
 
   return (
     <>
@@ -53,12 +121,18 @@ export default function PatientsPage({ patients, onSelect }: Props) {
         />
       </label>
 
-      {/* Column labels, lined up with the columns in each row */}
+      {/* Column labels, lined up with the columns in each row; click one to sort by it */}
       <div className="flex gap-8 px-2 pb-2 text-xs text-muted">
-        <span className="flex-1">Name</span>
-        <span className="w-12">Age</span>
+        <span className="flex-1">
+          <SortButton column="name" label="Name" sort={sort} onSort={sortBy} />
+        </span>
+        <span className="w-12">
+          <SortButton column="age" label="Age" sort={sort} onSort={sortBy} />
+        </span>
         <span className="w-40">Phone</span>
-        <span className="w-28">Last visit</span>
+        <span className="w-28">
+          <SortButton column="lastVisit" label="Last visit" sort={sort} onSort={sortBy} />
+        </span>
         {/* Same width as the edit pencil in each row */}
         <span className="w-[15px]" />
       </div>

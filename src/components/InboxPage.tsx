@@ -2,7 +2,7 @@ import { CornerUpLeft, TriangleAlert } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import type { InboxItem, InboxKind } from '../data'
-import { flaggedCount, inboxKinds, shortTime } from '../inbox'
+import { flaggedCount, inboxKinds, responses, shortTime } from '../inbox'
 import { transition } from '../motion'
 
 type Filter = 'all' | InboxKind
@@ -75,6 +75,7 @@ export default function InboxPage({ items, now, onOpen, onMarkAllRead }: Props) 
         <AnimatePresence initial={false}>
           {shown.map((item) => {
             const Icon = inboxKinds[item.kind].icon
+            const ResponseIcon = responses[item.kind].icon
             const flagged = flaggedCount(item)
             return (
               <motion.li
@@ -88,7 +89,9 @@ export default function InboxPage({ items, now, onOpen, onMarkAllRead }: Props) 
               >
                 <button
                   onClick={() => onOpen(item)}
-                  aria-label={`${item.read ? '' : 'Unread. '}${inboxKinds[item.kind].label} about ${item.patient}: ${item.subject}${item.replies?.length ? ', replied' : ''}`}
+                  aria-label={`${item.read ? '' : 'Unread. '}${inboxKinds[item.kind].label} about ${item.patient}: ${item.subject}${
+                    item.replies?.length ? (item.kind === 'lab' ? ', patient messaged' : ', replied') : ''
+                  }`}
                   className="flex w-full items-center gap-4 px-2 py-3.5 text-left text-sm transition-colors hover:bg-hover/50 focus-visible:bg-hover/50 focus-visible:-outline-offset-2"
                 >
                   {/* Unread dot; the space stays when read, so rows line up */}
@@ -104,19 +107,14 @@ export default function InboxPage({ items, now, onOpen, onMarkAllRead }: Props) 
                     <span className="text-muted"> — {item.body.replace(/\s+/g, ' ')}</span>
                   </span>
                   {flagged > 0 && (
-                    <span className="flex shrink-0 items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-700">
+                    <span className="flex shrink-0 items-center gap-1 rounded-[6px] bg-red-50 px-2 py-0.5 text-xs text-red-700">
                       <TriangleAlert size={12} strokeWidth={2} />
                       Flagged
                     </span>
                   )}
-                  {/* Shows the message has been answered */}
+                  {/* Shows you've responded: a reply arrow, or a paper plane for a messaged patient */}
                   {item.replies && item.replies.length > 0 && (
-                    <CornerUpLeft
-                      size={14}
-                      strokeWidth={1.75}
-                      aria-label="Replied"
-                      className="shrink-0 text-muted"
-                    />
+                    <ResponseIcon size={14} strokeWidth={1.75} aria-hidden className="shrink-0 text-muted" />
                   )}
                   <span className="w-20 shrink-0 text-right text-muted tabular-nums">
                     {shortTime(item, now)}

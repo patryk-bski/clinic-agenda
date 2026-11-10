@@ -88,11 +88,11 @@ export default function App() {
   }
 
   // Replies are only kept here (until the page reloads); they aren't sent anywhere
-  function replyTo(id: number, body: string) {
+  function replyTo(id: number, to: string, body: string) {
     setInbox((list) =>
       list.map((item) =>
         item.id === id
-          ? { ...item, replies: [...(item.replies ?? []), { body, sentAt: new Date() }] }
+          ? { ...item, replies: [...(item.replies ?? []), { to, body, sentAt: new Date() }] }
           : item,
       ),
     )
@@ -187,7 +187,7 @@ export default function App() {
               item={openItem}
               now={now}
               onMarkUnread={() => markUnread(openItem.id)}
-              onReply={(body) => replyTo(openItem.id, body)}
+              onReply={(to, body) => replyTo(openItem.id, to, body)}
               onClose={() => setOpenItemId(null)}
             />
           )}
