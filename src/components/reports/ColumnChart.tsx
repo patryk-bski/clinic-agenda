@@ -82,7 +82,7 @@ export default function ColumnChart({
                   onFocus={() => setHovered(i)}
                   onBlur={() => setHovered(null)}
                   // The whole band is the hover target, not just the thin column
-                  className="relative flex flex-1 items-end justify-center outline-none"
+                  className="relative flex flex-1 items-end justify-center focus-visible:-outline-offset-2"
                 >
                   <div
                     // At most 24px wide, and narrower when space is tight, so columns never touch

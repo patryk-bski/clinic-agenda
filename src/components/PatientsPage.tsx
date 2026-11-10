@@ -41,7 +41,7 @@ export default function PatientsPage({ patients, onSelect }: Props) {
         </p>
       </header>
 
-      <label className="mb-6 flex items-center gap-2 rounded-[6px] border border-line bg-white px-2.5 py-2 text-sm transition-colors focus-within:border-muted">
+      <label className="mb-6 flex items-center gap-2 rounded-[6px] border border-field bg-white px-2.5 py-2 text-sm transition-colors focus-within:border-ink">
         <Search size={15} strokeWidth={1.75} className="text-muted" />
         <input
           type="search"
@@ -78,7 +78,7 @@ export default function PatientsPage({ patients, onSelect }: Props) {
               {/* The whole row is a button that opens the patient for editing */}
               <button
                 onClick={() => onSelect(patient)}
-                className="group flex w-full items-center gap-8 px-2 py-3.5 text-left text-sm transition-colors hover:bg-hover/50 focus-visible:bg-hover/50 focus-visible:outline-none"
+                className="group flex w-full items-center gap-8 px-2 py-3.5 text-left text-sm transition-colors hover:bg-hover/50 focus-visible:bg-hover/50 focus-visible:-outline-offset-2"
               >
                 <span className="flex-1 font-medium">{patient.name}</span>
                 <span className="w-12 text-muted tabular-nums">{ageFrom(patient.dateOfBirth)}</span>

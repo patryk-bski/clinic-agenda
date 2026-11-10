@@ -21,7 +21,7 @@ export default function BarList({ rows, format }: Props) {
           onPointerLeave={() => setHovered(null)}
           onFocus={() => setHovered(row.label)}
           onBlur={() => setHovered(null)}
-          className="grid grid-cols-[9.5rem_1fr] items-center gap-3 text-sm outline-none"
+          className="grid grid-cols-[9.5rem_1fr] items-center gap-3 rounded-[4px] text-sm"
         >
           <span className="truncate text-muted">{row.label}</span>
           <span className="flex items-center gap-2">
