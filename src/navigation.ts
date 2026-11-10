@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 
-export type Page = 'agenda' | 'patients' | 'reports' | 'settings'
+export type Page = 'agenda' | 'inbox' | 'patients' | 'reports' | 'settings'
 
 // Each screen has its own address after the #, so the back button and reloading both work
 export const pageLinks: Record<Page, string> = {
   agenda: '#/',
+  inbox: '#/inbox',
   patients: '#/patients',
   reports: '#/reports',
   settings: '#/settings',

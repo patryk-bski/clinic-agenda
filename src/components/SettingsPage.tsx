@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { slotLengths, timeSlots, workingHourOptions, type Settings } from '../settings'
 
 const fieldClass =
-  'w-56 rounded-[6px] border border-line bg-white px-2.5 py-2 text-sm transition-colors focus:border-muted focus:outline-none'
+  'w-56 rounded-[6px] border border-field bg-white px-2.5 py-2 text-sm transition-colors focus:border-ink focus:outline-none'
 
 const toMinutes = (time: string) => {
   const [hh, mm] = time.split(':').map(Number)

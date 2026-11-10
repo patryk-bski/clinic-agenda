@@ -5,10 +5,12 @@ import BookingDialog from './components/BookingDialog'
 import ReportsPage from './components/reports/ReportsPage'
 import EditAppointmentDialog from './components/EditAppointmentDialog'
 import EditPatientDialog from './components/EditPatientDialog'
+import InboxItemDialog from './components/InboxItemDialog'
+import InboxPage from './components/InboxPage'
 import PatientsPage from './components/PatientsPage'
 import SettingsPage from './components/SettingsPage'
 import Sidebar from './components/Sidebar'
-import { appointments, patients, type Appointment, type Patient } from './data'
+import { appointments, inboxItems, patients, type Appointment, type Patient } from './data'
 import { fade } from './motion'
 import { useCurrentPage } from './navigation'
 import { loadSettings, saveSettings, timeSlots } from './settings'
@@ -64,6 +66,27 @@ export default function App() {
     setSelectedPatientId(null)
   }
 
+  // Inbox: opening an item marks it as read; read/unread is kept here until the page reloads.
+  // The clock is read once, so "received" times don't shift while the app is open.
+  const [now] = useState(() => new Date())
+  const [inbox, setInbox] = useState(inboxItems)
+  const [openItemId, setOpenItemId] = useState<number | null>(null)
+  const openItem = inbox.find((item) => item.id === openItemId)
+  const unreadCount = inbox.filter((item) => !item.read).length
+
+  const setRead = (id: number, read: boolean) =>
+    setInbox((list) => list.map((item) => (item.id === id ? { ...item, read } : item)))
+
+  function openInboxItem(id: number) {
+    setRead(id, true)
+    setOpenItemId(id)
+  }
+
+  function markUnread(id: number) {
+    setRead(id, false)
+    setOpenItemId(null)
+  }
+
   return (
     // reducedMotion="user": people who turn off animations in their system settings get only simple fades
     <MotionConfig reducedMotion="user">
@@ -72,15 +95,24 @@ export default function App() {
           currentPage={page}
           clinicianName={settings.clinicianName}
           specialty={settings.specialty}
+          unreadCount={unreadCount}
         />
 
-        <main className="flex flex-1 flex-col px-16 py-14">
+        {/* min-w-0 lets the content area shrink to the window, so long one-line text is cut off with "…" */}
+        <main className="flex min-w-0 flex-1 flex-col px-16 py-14">
           <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col">
             {/* Crossfade between screens */}
             <AnimatePresence mode="wait" initial={false}>
               <motion.div key={page} className="flex flex-1 flex-col" {...fade}>
                 {page === 'settings' ? (
                   <SettingsPage settings={settings} onChange={setSettings} />
+                ) : page === 'inbox' ? (
+                  <InboxPage
+                    items={inbox}
+                    now={now}
+                    onOpen={(item) => openInboxItem(item.id)}
+                    onMarkAllRead={() => setInbox((list) => list.map((item) => ({ ...item, read: true })))}
+                  />
                 ) : page === 'reports' ? (
                   <ReportsPage todaysAppointments={todaysAppointments} />
                 ) : page === 'patients' ? (
@@ -133,6 +165,18 @@ export default function App() {
               onSave={(changes) => updatePatient(selectedPatient.id, changes)}
               onDelete={() => deletePatient(selectedPatient.id)}
               onClose={() => setSelectedPatientId(null)}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {openItem && (
+            <InboxItemDialog
+              key={openItem.id}
+              item={openItem}
+              now={now}
+              onMarkUnread={() => markUnread(openItem.id)}
+              onClose={() => setOpenItemId(null)}
             />
           )}
         </AnimatePresence>

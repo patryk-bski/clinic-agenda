@@ -14,7 +14,7 @@ const appointmentTypes = [
 ]
 
 const fieldClass =
-  'mt-1.5 w-full rounded-[6px] border border-line bg-white px-2.5 py-2 text-sm transition-colors focus:border-muted focus:outline-none'
+  'mt-1.5 w-full rounded-[6px] border border-field bg-white px-2.5 py-2 text-sm transition-colors focus:border-ink focus:outline-none'
 
 type Props = {
   // Filled in when editing an existing appointment; empty when booking a new one
@@ -111,7 +111,7 @@ export default function AppointmentForm({
         </button>
         <button
           type="submit"
-          className="rounded-[6px] bg-[#C2410C] px-3 py-2 text-sm text-white transition-colors hover:bg-[#9A3412]"
+          className="rounded-[6px] bg-brand px-3 py-2 text-sm text-white transition-colors hover:bg-brand-hover"
         >
           {submitLabel}
         </button>
