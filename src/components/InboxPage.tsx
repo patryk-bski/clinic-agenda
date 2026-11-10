@@ -1,4 +1,4 @@
-import { TriangleAlert } from 'lucide-react'
+import { CornerUpLeft, TriangleAlert } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import type { InboxItem, InboxKind } from '../data'
@@ -7,11 +7,13 @@ import { transition } from '../motion'
 
 type Filter = 'all' | InboxKind
 
-const filters: { value: Filter; label: string }[] = [
+// "All" has no icon; each kind uses the same icon as its rows in the list
+const filters: { value: Filter; label: string; icon?: typeof CornerUpLeft }[] = [
   { value: 'all', label: 'All' },
   ...(Object.keys(inboxKinds) as InboxKind[]).map((kind) => ({
     value: kind,
     label: inboxKinds[kind].plural,
+    icon: inboxKinds[kind].icon,
   })),
 ]
 
@@ -49,7 +51,7 @@ export default function InboxPage({ items, now, onOpen, onMarkAllRead }: Props) 
 
       {/* Filter tabs, each with how many items it holds; the selected one is underlined */}
       <div role="tablist" aria-label="Show" className="mb-4 flex gap-4">
-        {filters.map(({ value, label }) => {
+        {filters.map(({ value, label, icon: Icon }) => {
           const count = value === 'all' ? items.length : items.filter((item) => item.kind === value).length
           const isCurrent = filter === value
           return (
@@ -58,10 +60,11 @@ export default function InboxPage({ items, now, onOpen, onMarkAllRead }: Props) 
               role="tab"
               aria-selected={isCurrent}
               onClick={() => setFilter(value)}
-              className={`border-b-2 py-1.5 text-sm transition-colors ${
+              className={`flex items-center gap-1.5 border-b-2 py-1.5 text-sm transition-colors ${
                 isCurrent ? 'border-ink font-medium' : 'border-transparent text-muted hover:text-ink'
               }`}
             >
+              {Icon && <Icon size={15} strokeWidth={1.75} aria-hidden />}
               {label} <span className="text-muted tabular-nums">{count}</span>
             </button>
           )
@@ -85,7 +88,7 @@ export default function InboxPage({ items, now, onOpen, onMarkAllRead }: Props) 
               >
                 <button
                   onClick={() => onOpen(item)}
-                  aria-label={`${item.read ? '' : 'Unread. '}${inboxKinds[item.kind].label} about ${item.patient}: ${item.subject}`}
+                  aria-label={`${item.read ? '' : 'Unread. '}${inboxKinds[item.kind].label} about ${item.patient}: ${item.subject}${item.replies?.length ? ', replied' : ''}`}
                   className="flex w-full items-center gap-4 px-2 py-3.5 text-left text-sm transition-colors hover:bg-hover/50 focus-visible:bg-hover/50 focus-visible:-outline-offset-2"
                 >
                   {/* Unread dot; the space stays when read, so rows line up */}
@@ -105,6 +108,15 @@ export default function InboxPage({ items, now, onOpen, onMarkAllRead }: Props) 
                       <TriangleAlert size={12} strokeWidth={2} />
                       Flagged
                     </span>
+                  )}
+                  {/* Shows the message has been answered */}
+                  {item.replies && item.replies.length > 0 && (
+                    <CornerUpLeft
+                      size={14}
+                      strokeWidth={1.75}
+                      aria-label="Replied"
+                      className="shrink-0 text-muted"
+                    />
                   )}
                   <span className="w-20 shrink-0 text-right text-muted tabular-nums">
                     {shortTime(item, now)}
