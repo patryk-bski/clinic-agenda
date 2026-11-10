@@ -8,8 +8,20 @@ export type Appointment = {
   status: Status
 }
 
-// Fake data: today's appointments for one clinician
-export const appointments: Appointment[] = []
+// Fake data: today's appointments for one clinician, one for each patient below.
+// The Reports screen counts these as today's appointments, so the two always agree.
+export const appointments: Appointment[] = [
+  { id: 1, time: '08:30', patient: 'Maria Kowalska', type: 'Follow-up', status: 'confirmed' },
+  { id: 2, time: '09:00', patient: 'James Carter', type: 'New patient', status: 'confirmed' },
+  { id: 3, time: '09:30', patient: 'Aisha Rahman', type: 'Blood test review', status: 'confirmed' },
+  { id: 4, time: '10:00', patient: 'Tomás Silva', type: 'Vaccination', status: 'confirmed' },
+  { id: 5, time: '10:30', patient: 'Emily Nguyen', type: 'Annual check-up', status: 'confirmed' },
+  { id: 6, time: '11:15', patient: 'Piotr Nowak', type: 'Prescription renewal', status: 'cancelled' },
+  { id: 7, time: '13:00', patient: 'Grace Okafor', type: 'Telehealth call', status: 'confirmed' },
+  { id: 8, time: '14:00', patient: 'Lucas Martin', type: 'Follow-up', status: 'waiting' },
+  { id: 9, time: '15:30', patient: 'Sofia Rossi', type: 'Follow-up', status: 'waiting' },
+  { id: 10, time: '16:15', patient: 'Daniel Becker', type: 'New patient', status: 'confirmed' },
+]
 
 export type Patient = {
   id: number

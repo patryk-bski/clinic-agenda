@@ -1,9 +1,10 @@
-import { Calendar, Settings, Users } from 'lucide-react'
+import { BarChart3, Calendar, Settings, Users } from 'lucide-react'
 import { pageLinks, type Page } from '../navigation'
 
 const navItems: { label: string; icon: typeof Calendar; page: Page }[] = [
   { label: 'Agenda', icon: Calendar, page: 'agenda' },
   { label: 'Patients', icon: Users, page: 'patients' },
+  { label: 'Reports', icon: BarChart3, page: 'reports' },
   { label: 'Settings', icon: Settings, page: 'settings' },
 ]
 
@@ -15,7 +16,8 @@ type Props = {
 
 export default function Sidebar({ currentPage, clinicianName, specialty }: Props) {
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-line bg-sidebar">
+    // Pinned to the window: stays put, full height, while the page content scrolls
+    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line bg-sidebar">
       <div className="px-5 pt-5 pb-4 text-sm font-semibold">Clinic Agenda</div>
 
       <nav className="flex-1 space-y-0.5 px-2">

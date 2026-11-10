@@ -2,6 +2,7 @@ import { AnimatePresence, motion, MotionConfig } from 'motion/react'
 import { useEffect, useState } from 'react'
 import AgendaPage from './components/AgendaPage'
 import BookingDialog from './components/BookingDialog'
+import ReportsPage from './components/reports/ReportsPage'
 import EditAppointmentDialog from './components/EditAppointmentDialog'
 import EditPatientDialog from './components/EditPatientDialog'
 import PatientsPage from './components/PatientsPage'
@@ -80,6 +81,8 @@ export default function App() {
               <motion.div key={page} className="flex flex-1 flex-col" {...fade}>
                 {page === 'settings' ? (
                   <SettingsPage settings={settings} onChange={setSettings} />
+                ) : page === 'reports' ? (
+                  <ReportsPage todaysAppointments={todaysAppointments} />
                 ) : page === 'patients' ? (
                   <PatientsPage
                     patients={patientList}

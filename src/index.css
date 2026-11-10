@@ -10,6 +10,15 @@
   --color-muted: #787774;
   --color-line: #e9e9e7;
   --color-hover: #efefed;
+
+  /* Chart colors, in a fixed order checked for color-blind safety on the page background.
+     Aqua and yellow are faint on white, so every chart also has a legend and a table view. */
+  --color-series-1: #2a78d6; /* blue */
+  --color-series-2: #eb6834; /* orange */
+  --color-series-3: #1baf7a; /* aqua */
+  --color-series-4: #eda100; /* yellow */
+  --color-chart-grid: #e1e0d9; /* hairline gridlines */
+  --color-chart-rest: #d6d5cf; /* bars that aren't the highlighted one */
 }
 
 body {
