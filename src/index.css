@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+/* Theme: colors and font, usable as Tailwind classes like bg-page or text-muted */
+@theme {
+  --font-sans: "Google Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-page: #fbfbfa;
+  --color-sidebar: #f7f7f5;
+  --color-ink: #37352f;
+  --color-muted: #787774;
+  --color-line: #e9e9e7;
+  --color-hover: #efefed;
+}
+
+body {
+  @apply bg-page font-sans text-ink antialiased;
+}
