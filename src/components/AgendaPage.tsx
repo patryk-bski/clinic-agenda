@@ -22,9 +22,10 @@ type Props = {
   appointments: Appointment[]
   onBook: () => void
   onSelect: (appointment: Appointment) => void
+  patientHref: (name: string) => string | undefined
 }
 
-export default function AgendaPage({ appointments, onBook, onSelect }: Props) {
+export default function AgendaPage({ appointments, onBook, onSelect, patientHref }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
   const hasAppointments = appointments.length > 0
@@ -105,7 +106,7 @@ export default function AgendaPage({ appointments, onBook, onSelect }: Props) {
               </label>
             </div>
 
-            <AppointmentList appointments={shown} onSelect={onSelect} />
+            <AppointmentList appointments={shown} onSelect={onSelect} patientHref={patientHref} />
 
             {shown.length === 0 && (
               <p className="py-10 text-center text-sm text-muted">

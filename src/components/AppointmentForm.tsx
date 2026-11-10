@@ -17,8 +17,8 @@ const fieldClass =
   'mt-1.5 w-full rounded-[6px] border border-field bg-white px-2.5 py-2 text-sm transition-colors focus:border-ink focus:outline-none'
 
 type Props = {
-  // Filled in when editing an existing appointment; empty when booking a new one
-  initial?: Omit<Appointment, 'id'>
+  // Filled in when editing an existing appointment; empty (or just the patient) when booking
+  initial?: Partial<Omit<Appointment, 'id'>>
   // Bookable times, from the working hours in Settings
   times: string[]
   showStatus?: boolean
@@ -40,7 +40,7 @@ export default function AppointmentForm({
 }: Props) {
   // Keep an existing appointment's time in the list even if it's outside the current working hours
   const times =
-    initial && !bookableTimes.includes(initial.time)
+    initial?.time && !bookableTimes.includes(initial.time)
       ? [...bookableTimes, initial.time].sort()
       : bookableTimes
 

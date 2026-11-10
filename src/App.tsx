@@ -10,19 +10,23 @@ import EditAppointmentDialog from './components/EditAppointmentDialog'
 import EditPatientDialog from './components/EditPatientDialog'
 import InboxItemDialog from './components/InboxItemDialog'
 import InboxPage from './components/InboxPage'
+import PatientRecordPage from './components/PatientRecordPage'
 import PatientsPage from './components/PatientsPage'
 import SettingsPage from './components/SettingsPage'
 import Sidebar from './components/Sidebar'
 import { sampleInvoices, type Invoice } from './billing'
 import { appointments, inboxItems, patients, type Appointment, type Patient } from './data'
 import { fade } from './motion'
-import { useCurrentPage } from './navigation'
+import { pageLinks, patientLink, useCurrentRoute } from './navigation'
+import { initialNotes, visitHistory, type Note } from './records'
 import { loadSettings, saveSettings, timeSlots } from './settings'
 
 const byTime = (a: Appointment, b: Appointment) => a.time.localeCompare(b.time)
 
 export default function App() {
-  const page = useCurrentPage()
+  // The screen to show; patientId is set when a patient's record is open (#/patients/3)
+  const route = useCurrentRoute()
+  const page = route.page
 
   // Settings shape the rest of the app: the sidebar profile and the bookable times.
   // They're loaded from this browser on start and saved again whenever they change.
@@ -34,13 +38,14 @@ export default function App() {
   // The agenda starts with the fake data; bookings and edits are kept here (until the page reloads).
   // They live in App, not AgendaPage, so they survive switching to Patients and back.
   const [todaysAppointments, setTodaysAppointments] = useState(appointments)
-  const [isBooking, setIsBooking] = useState(false)
+  // The booking popup is open when this is set; `patient` pre-fills it (booking from a record)
+  const [booking, setBooking] = useState<{ patient?: string } | null>(null)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const selected = todaysAppointments.find((appt) => appt.id === selectedId)
 
   function bookAppointment(appointment: Omit<Appointment, 'id'>) {
     setTodaysAppointments((list) => [...list, { ...appointment, id: Date.now() }].sort(byTime))
-    setIsBooking(false)
+    setBooking(null)
   }
 
   function updateAppointment(id: number, changes: Omit<Appointment, 'id'>) {
@@ -68,7 +73,26 @@ export default function App() {
   function deletePatient(id: number) {
     setPatientList((list) => list.filter((patient) => patient.id !== id))
     setSelectedPatientId(null)
+    // Deleted from their own record: go back to the patient list
+    if (route.patientId === id) window.location.hash = pageLinks.patients
   }
+
+  // The patient whose record is open, if any
+  const recordPatient = patientList.find((patient) => patient.id === route.patientId)
+
+  // Appointments, inbox items and invoices store the patient's name; this finds their record
+  const patientHref = (name: string) => {
+    const patient = patientList.find((p) => p.name === name)
+    return patient && patientLink(patient.id)
+  }
+
+  // Clinical notes per patient id, kept here until the page reloads
+  const [notes, setNotes] = useState(initialNotes)
+  const addNote = (patientId: number, text: string) =>
+    setNotes((all) => ({
+      ...all,
+      [patientId]: [...(all[patientId] ?? []), { id: Date.now(), text, written: new Date() } satisfies Note],
+    }))
 
   // Inbox: opening an item marks it as read; read/unread is kept here until the page reloads.
   // The clock is read once, so "received" times don't shift while the app is open.
@@ -139,7 +163,7 @@ export default function App() {
           <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col">
             {/* Crossfade between screens */}
             <AnimatePresence mode="wait" initial={false}>
-              <motion.div key={page} className="flex flex-1 flex-col" {...fade}>
+              <motion.div key={`${page}-${route.patientId ?? ''}`} className="flex flex-1 flex-col" {...fade}>
                 {page === 'settings' ? (
                   <SettingsPage settings={settings} onChange={setSettings} />
                 ) : page === 'inbox' ? (
@@ -158,16 +182,39 @@ export default function App() {
                   />
                 ) : page === 'reports' ? (
                   <ReportsPage todaysAppointments={todaysAppointments} />
+                ) : page === 'patients' && route.patientId !== undefined ? (
+                  recordPatient ? (
+                    <PatientRecordPage
+                      patient={recordPatient}
+                      now={now}
+                      appointments={todaysAppointments.filter((appt) => appt.patient === recordPatient.name)}
+                      visits={visitHistory[recordPatient.id] ?? []}
+                      notes={notes[recordPatient.id] ?? []}
+                      inboxItems={inbox.filter((item) => item.patient === recordPatient.name)}
+                      invoices={invoices.filter((invoice) => invoice.patient === recordPatient.name)}
+                      onEdit={() => setSelectedPatientId(recordPatient.id)}
+                      onBook={() => setBooking({ patient: recordPatient.name })}
+                      onOpenAppointment={(appt) => setSelectedId(appt.id)}
+                      onAddNote={(text) => addNote(recordPatient.id, text)}
+                      onOpenInboxItem={(item) => openInboxItem(item.id)}
+                      onOpenInvoice={(invoice) => setOpenInvoiceId(invoice.id)}
+                    />
+                  ) : (
+                    <div className="py-20 text-center">
+                      <p className="text-sm text-muted">This patient isn't in your list.</p>
+                      <a href={pageLinks.patients} className="mt-2 inline-block text-sm underline underline-offset-2">
+                        Back to all patients
+                      </a>
+                    </div>
+                  )
                 ) : page === 'patients' ? (
-                  <PatientsPage
-                    patients={patientList}
-                    onSelect={(patient) => setSelectedPatientId(patient.id)}
-                  />
+                  <PatientsPage patients={patientList} />
                 ) : (
                   <AgendaPage
                     appointments={todaysAppointments}
-                    onBook={() => setIsBooking(true)}
+                    onBook={() => setBooking({})}
                     onSelect={(appt) => setSelectedId(appt.id)}
+                    patientHref={patientHref}
                   />
                 )}
               </motion.div>
@@ -177,12 +224,13 @@ export default function App() {
 
         {/* AnimatePresence keeps a closing popup on screen until its exit animation finishes */}
         <AnimatePresence>
-          {isBooking && (
+          {booking && (
             <BookingDialog
               key="booking"
               times={bookableTimes}
+              patient={booking.patient}
               onBook={bookAppointment}
-              onClose={() => setIsBooking(false)}
+              onClose={() => setBooking(null)}
             />
           )}
         </AnimatePresence>

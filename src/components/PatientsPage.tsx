@@ -1,25 +1,11 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react'
+import { ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, Search } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import type { Patient } from '../data'
+import { ageFrom, formatDay } from '../dates'
 import { transition } from '../motion'
+import { patientLink } from '../navigation'
 import EditHint from './EditHint'
-
-// Dates are stored as YYYY-MM-DD; adding a time makes the browser read them in local time, not UTC
-const toLocalDate = (date: string) => new Date(`${date}T00:00`)
-
-function ageFrom(dateOfBirth: string) {
-  const birth = toLocalDate(dateOfBirth)
-  const now = new Date()
-  const hadBirthdayThisYear =
-    now.getMonth() > birth.getMonth() ||
-    (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate())
-  return now.getFullYear() - birth.getFullYear() - (hadBirthdayThisYear ? 0 : 1)
-}
-
-function formatDate(date: string) {
-  return toLocalDate(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-}
 
 type SortKey = 'name' | 'age' | 'lastVisit'
 type Sort = { key: SortKey; direction: 'asc' | 'desc' }
@@ -79,10 +65,9 @@ function SortButton({
 
 type Props = {
   patients: Patient[]
-  onSelect: (patient: Patient) => void
 }
 
-export default function PatientsPage({ patients, onSelect }: Props) {
+export default function PatientsPage({ patients }: Props) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<Sort>({ key: 'name', direction: 'asc' })
 
@@ -149,17 +134,17 @@ export default function PatientsPage({ patients, onSelect }: Props) {
               transition={transition}
               className="overflow-hidden border-b border-line"
             >
-              {/* The whole row is a button that opens the patient for editing */}
-              <button
-                onClick={() => onSelect(patient)}
+              {/* The whole row is a link to the patient's record */}
+              <a
+                href={patientLink(patient.id)}
                 className="group flex w-full items-center gap-8 px-2 py-3.5 text-left text-sm transition-colors hover:bg-hover/50 focus-visible:bg-hover/50 focus-visible:-outline-offset-2"
               >
                 <span className="flex-1 font-medium">{patient.name}</span>
                 <span className="w-12 text-muted tabular-nums">{ageFrom(patient.dateOfBirth)}</span>
                 <span className="w-40 text-muted tabular-nums">{patient.phone}</span>
-                <span className="w-28 text-muted">{formatDate(patient.lastVisit)}</span>
-                <EditHint />
-              </button>
+                <span className="w-28 text-muted">{formatDay(patient.lastVisit)}</span>
+                <EditHint icon={ArrowRight} />
+              </a>
             </motion.li>
           ))}
         </AnimatePresence>
