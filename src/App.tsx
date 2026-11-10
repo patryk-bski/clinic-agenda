@@ -1,19 +1,28 @@
 import { AnimatePresence, motion, MotionConfig } from 'motion/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AgendaPage from './components/AgendaPage'
 import BookingDialog from './components/BookingDialog'
 import EditAppointmentDialog from './components/EditAppointmentDialog'
 import EditPatientDialog from './components/EditPatientDialog'
 import PatientsPage from './components/PatientsPage'
+import SettingsPage from './components/SettingsPage'
 import Sidebar from './components/Sidebar'
 import { appointments, patients, type Appointment, type Patient } from './data'
 import { fade } from './motion'
 import { useCurrentPage } from './navigation'
+import { loadSettings, saveSettings, timeSlots } from './settings'
 
 const byTime = (a: Appointment, b: Appointment) => a.time.localeCompare(b.time)
 
 export default function App() {
   const page = useCurrentPage()
+
+  // Settings shape the rest of the app: the sidebar profile and the bookable times.
+  // They're loaded from this browser on start and saved again whenever they change.
+  const [settings, setSettings] = useState(loadSettings)
+  const bookableTimes = timeSlots(settings)
+
+  useEffect(() => saveSettings(settings), [settings])
 
   // The agenda starts with the fake data; bookings and edits are kept here (until the page reloads).
   // They live in App, not AgendaPage, so they survive switching to Patients and back.
@@ -58,14 +67,20 @@ export default function App() {
     // reducedMotion="user": people who turn off animations in their system settings get only simple fades
     <MotionConfig reducedMotion="user">
       <div className="flex min-h-screen">
-        <Sidebar currentPage={page} />
+        <Sidebar
+          currentPage={page}
+          clinicianName={settings.clinicianName}
+          specialty={settings.specialty}
+        />
 
         <main className="flex flex-1 flex-col px-16 py-14">
           <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col">
             {/* Crossfade between screens */}
             <AnimatePresence mode="wait" initial={false}>
               <motion.div key={page} className="flex flex-1 flex-col" {...fade}>
-                {page === 'patients' ? (
+                {page === 'settings' ? (
+                  <SettingsPage settings={settings} onChange={setSettings} />
+                ) : page === 'patients' ? (
                   <PatientsPage
                     patients={patientList}
                     onSelect={(patient) => setSelectedPatientId(patient.id)}
@@ -87,6 +102,7 @@ export default function App() {
           {isBooking && (
             <BookingDialog
               key="booking"
+              times={bookableTimes}
               onBook={bookAppointment}
               onClose={() => setIsBooking(false)}
             />
@@ -98,6 +114,7 @@ export default function App() {
             <EditAppointmentDialog
               key={selected.id}
               appointment={selected}
+              times={bookableTimes}
               onSave={(changes) => updateAppointment(selected.id, changes)}
               onDelete={() => deleteAppointment(selected.id)}
               onClose={() => setSelectedId(null)}

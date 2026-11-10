@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
 
-export type Page = 'agenda' | 'patients'
+export type Page = 'agenda' | 'patients' | 'settings'
 
 // Each screen has its own address after the #, so the back button and reloading both work
 export const pageLinks: Record<Page, string> = {
   agenda: '#/',
   patients: '#/patients',
+  settings: '#/settings',
 }
 
 function pageFromAddress(): Page {
-  return window.location.hash === pageLinks.patients ? 'patients' : 'agenda'
+  const page = (Object.keys(pageLinks) as Page[]).find(
+    (key) => pageLinks[key] === window.location.hash,
+  )
+  return page ?? 'agenda'
 }
 
 // The screen to show, kept in sync with the address bar

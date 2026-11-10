@@ -13,20 +13,14 @@ const appointmentTypes = [
   'Prescription renewal',
 ]
 
-// Bookable times: every 15 minutes from 07:00 to 19:45
-const timeSlots = Array.from({ length: 52 }, (_, i) => {
-  const minutes = 7 * 60 + i * 15
-  const hh = String(Math.floor(minutes / 60)).padStart(2, '0')
-  const mm = String(minutes % 60).padStart(2, '0')
-  return `${hh}:${mm}`
-})
-
 const fieldClass =
   'mt-1.5 w-full rounded-[6px] border border-line bg-white px-2.5 py-2 text-sm transition-colors focus:border-muted focus:outline-none'
 
 type Props = {
   // Filled in when editing an existing appointment; empty when booking a new one
   initial?: Omit<Appointment, 'id'>
+  // Bookable times, from the working hours in Settings
+  times: string[]
   showStatus?: boolean
   submitLabel: string
   onSubmit: (appointment: Omit<Appointment, 'id'>) => void
@@ -37,15 +31,18 @@ type Props = {
 // The fields shared by "Book appointment" and "Edit appointment"
 export default function AppointmentForm({
   initial,
+  times: bookableTimes,
   showStatus,
   submitLabel,
   onSubmit,
   onCancel,
   ref,
 }: Props) {
-  // Keep an existing appointment's time in the list even if it isn't on the 15-minute grid
+  // Keep an existing appointment's time in the list even if it's outside the current working hours
   const times =
-    initial && !timeSlots.includes(initial.time) ? [...timeSlots, initial.time].sort() : timeSlots
+    initial && !bookableTimes.includes(initial.time)
+      ? [...bookableTimes, initial.time].sort()
+      : bookableTimes
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
