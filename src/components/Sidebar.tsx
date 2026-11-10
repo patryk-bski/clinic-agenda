@@ -18,7 +18,7 @@ export default function Sidebar() {
           <a
             key={label}
             href="#"
-            className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm hover:bg-hover ${
+            className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors hover:bg-hover ${
               label === 'Agenda' ? 'bg-hover font-medium' : 'text-muted'
             }`}
           >
