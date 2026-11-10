@@ -1,6 +1,7 @@
-import type { FormEvent } from 'react'
+import type { FormEvent, Ref } from 'react'
 import type { Appointment } from '../data'
-import { statusStyles, type Status } from '../status'
+import { readAppointmentForm } from '../formValues'
+import { statusStyles } from '../status'
 
 const appointmentTypes = [
   'Follow-up',
@@ -21,7 +22,7 @@ const timeSlots = Array.from({ length: 52 }, (_, i) => {
 })
 
 const fieldClass =
-  'mt-1.5 w-full rounded-[6px] border border-line bg-white px-2.5 py-2 text-sm focus:border-muted focus:outline-none'
+  'mt-1.5 w-full rounded-[6px] border border-line bg-white px-2.5 py-2 text-sm transition-colors focus:border-muted focus:outline-none'
 
 type Props = {
   // Filled in when editing an existing appointment; empty when booking a new one
@@ -30,28 +31,29 @@ type Props = {
   submitLabel: string
   onSubmit: (appointment: Omit<Appointment, 'id'>) => void
   onCancel: () => void
+  ref?: Ref<HTMLFormElement>
 }
 
 // The fields shared by "Book appointment" and "Edit appointment"
-export default function AppointmentForm({ initial, showStatus, submitLabel, onSubmit, onCancel }: Props) {
+export default function AppointmentForm({
+  initial,
+  showStatus,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  ref,
+}: Props) {
   // Keep an existing appointment's time in the list even if it isn't on the 15-minute grid
   const times =
     initial && !timeSlots.includes(initial.time) ? [...timeSlots, initial.time].sort() : timeSlots
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const form = new FormData(e.currentTarget)
-    onSubmit({
-      patient: String(form.get('patient')).trim(),
-      time: String(form.get('time')),
-      type: String(form.get('type')),
-      // New bookings start as confirmed; edits keep whatever status was picked
-      status: (form.get('status') as Status | null) ?? 'confirmed',
-    })
+    onSubmit(readAppointmentForm(e.currentTarget))
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form ref={ref} onSubmit={handleSubmit}>
       <div className="space-y-4">
         <label className="block text-sm">
           Patient name
@@ -106,13 +108,13 @@ export default function AppointmentForm({ initial, showStatus, submitLabel, onSu
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-[6px] bg-hover px-3 py-2 text-sm hover:bg-line"
+          className="rounded-[6px] bg-hover px-3 py-2 text-sm transition-colors hover:bg-line"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="rounded-[6px] bg-[#C2410C] px-3 py-2 text-sm text-white hover:bg-[#9A3412]"
+          className="rounded-[6px] bg-[#C2410C] px-3 py-2 text-sm text-white transition-colors hover:bg-[#9A3412]"
         >
           {submitLabel}
         </button>
