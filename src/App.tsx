@@ -1,10 +1,34 @@
-import { Plus } from 'lucide-react'
+import { useState } from 'react'
+import AppointmentDetails from './components/AppointmentDetails'
 import AppointmentList from './components/AppointmentList'
+import BookButton from './components/BookButton'
+import BookingDialog from './components/BookingDialog'
+import EmptyState from './components/EmptyState'
 import Sidebar from './components/Sidebar'
-import { appointments } from './data'
+import { appointments, type Appointment } from './data'
+
+const byTime = (a: Appointment, b: Appointment) => a.time.localeCompare(b.time)
 
 export default function App() {
-  const today = new Date().toLocaleDateString(undefined, {
+  // The agenda starts with the fake data; bookings and edits are kept here (until the page reloads)
+  const [todaysAppointments, setTodaysAppointments] = useState(appointments)
+  const [isBooking, setIsBooking] = useState(false)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const selected = todaysAppointments.find((appt) => appt.id === selectedId)
+  const hasAppointments = todaysAppointments.length > 0
+
+  function bookAppointment(appointment: Omit<Appointment, 'id'>) {
+    setTodaysAppointments((list) => [...list, { ...appointment, id: Date.now() }].sort(byTime))
+    setIsBooking(false)
+  }
+
+  function updateAppointment(id: number, changes: Omit<Appointment, 'id'>) {
+    setTodaysAppointments((list) =>
+      list.map((appt) => (appt.id === id ? { ...changes, id } : appt)).sort(byTime),
+    )
+  }
+
+  const today = new Date().toLocaleDateString('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -14,27 +38,39 @@ export default function App() {
     <div className="flex min-h-screen">
       <Sidebar />
 
-      <main className="flex-1 px-16 py-14">
-        <div className="mx-auto max-w-4xl">
+      <main className="flex flex-1 flex-col px-16 py-14">
+        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col">
           <header className="mb-10 flex items-end justify-between">
             <div>
               <h1 className="text-4xl font-semibold tracking-tight">Today</h1>
               <p className="mt-2 text-sm text-muted">
-                {today} · {appointments.length} appointments
+                {today} · {todaysAppointments.length}{' '}
+                {todaysAppointments.length === 1 ? 'appointment' : 'appointments'}
               </p>
             </div>
-            <button
-              onClick={() => alert('Booking form coming soon')}
-              className="flex items-center gap-1.5 rounded-[6px] bg-[#C2410C] px-3 py-2 text-sm font-normal text-white hover:bg-[#9A3412]"
-            >
-              <Plus size={15} strokeWidth={1.75} />
-              Book appointment
-            </button>
+            {hasAppointments && <BookButton onClick={() => setIsBooking(true)} />}
           </header>
 
-          <AppointmentList appointments={appointments} />
+          {hasAppointments ? (
+            <AppointmentList
+              appointments={todaysAppointments}
+              onSelect={(appt) => setSelectedId(appt.id)}
+            />
+          ) : (
+            <EmptyState onBook={() => setIsBooking(true)} />
+          )}
         </div>
       </main>
+
+      {isBooking && <BookingDialog onBook={bookAppointment} onClose={() => setIsBooking(false)} />}
+
+      {selected && (
+        <AppointmentDetails
+          appointment={selected}
+          onSave={(changes) => updateAppointment(selected.id, changes)}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </div>
   )
 }
