@@ -1,4 +1,4 @@
-import { FileText, FlaskConical, MessageSquare } from 'lucide-react'
+import { CornerUpLeft, FileText, FlaskConical, MessageSquare, Send } from 'lucide-react'
 import type { InboxItem, InboxKind } from './data'
 
 // Name and icon for each kind of inbox item
@@ -6,6 +6,23 @@ export const inboxKinds: Record<InboxKind, { label: string; plural: string; icon
   message: { label: 'Message', plural: 'Messages', icon: MessageSquare },
   lab: { label: 'Lab result', plural: 'Lab results', icon: FlaskConical },
   referral: { label: 'Referral letter', plural: 'Referrals', icon: FileText },
+}
+
+// How you respond to each kind of item, and who it goes to.
+// Labs are automated, so instead of replying to the lab you message the patient about the result.
+export const responses: Record<
+  InboxKind,
+  { button: string; icon: typeof FileText; recipient: (item: InboxItem) => string; sent: string }
+> = {
+  message: { button: 'Reply', icon: CornerUpLeft, recipient: (item) => item.from, sent: 'You replied to' },
+  // "Dr. Helen Ward, Cardiology, Riverside Hospital" → "Dr. Helen Ward"
+  referral: {
+    button: 'Reply',
+    icon: CornerUpLeft,
+    recipient: (item) => item.from.split(',')[0],
+    sent: 'You replied to',
+  },
+  lab: { button: 'Message patient', icon: Send, recipient: (item) => item.patient, sent: 'You messaged' },
 }
 
 export const receivedAt = (item: InboxItem, now: Date) =>

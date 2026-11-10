@@ -51,7 +51,7 @@ export default function Sidebar({ currentPage, clinicianName, specialty, unreadC
                 {page === 'inbox' && unreadCount > 0 && (
                   <span
                     aria-label={`${unreadCount} unread`}
-                    className="ml-auto rounded-full bg-brand px-1.5 text-xs leading-5 font-medium text-white tabular-nums"
+                    className="ml-auto rounded-[6px] bg-brand px-1.5 text-xs leading-5 font-medium text-white tabular-nums"
                   >
                     {unreadCount}
                   </span>

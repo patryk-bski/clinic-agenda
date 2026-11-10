@@ -65,10 +65,11 @@ export type InboxItem = {
   receivedMinutesAgo: number // so the sample inbox always looks recent
   read: boolean
   results?: LabResult[] // lab results only
-  replies?: Reply[] // messages only; kept in the app, not actually sent anywhere
+  replies?: Reply[] // what you sent in response; kept in the app, not actually sent anywhere
 }
 
 export type Reply = {
+  to: string // the sender, or for lab results the patient
   body: string
   sentAt: Date
 }
