@@ -87,6 +87,17 @@ export default function App() {
     setOpenItemId(null)
   }
 
+  // Replies are only kept here (until the page reloads); they aren't sent anywhere
+  function replyTo(id: number, body: string) {
+    setInbox((list) =>
+      list.map((item) =>
+        item.id === id
+          ? { ...item, replies: [...(item.replies ?? []), { body, sentAt: new Date() }] }
+          : item,
+      ),
+    )
+  }
+
   return (
     // reducedMotion="user": people who turn off animations in their system settings get only simple fades
     <MotionConfig reducedMotion="user">
@@ -176,6 +187,7 @@ export default function App() {
               item={openItem}
               now={now}
               onMarkUnread={() => markUnread(openItem.id)}
+              onReply={(body) => replyTo(openItem.id, body)}
               onClose={() => setOpenItemId(null)}
             />
           )}

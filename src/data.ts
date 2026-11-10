@@ -65,6 +65,12 @@ export type InboxItem = {
   receivedMinutesAgo: number // so the sample inbox always looks recent
   read: boolean
   results?: LabResult[] // lab results only
+  replies?: Reply[] // messages only; kept in the app, not actually sent anywhere
+}
+
+export type Reply = {
+  body: string
+  sentAt: Date
 }
 
 // Fake data: messages from patients, lab results and referral letters, newest first.

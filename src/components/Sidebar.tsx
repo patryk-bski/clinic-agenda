@@ -19,8 +19,9 @@ type Props = {
 
 export default function Sidebar({ currentPage, clinicianName, specialty, unreadCount }: Props) {
   return (
-    // Pinned to the window: stays put, full height, while the page content scrolls
-    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line bg-sidebar">
+    // A floating panel pinned to the window: 8px clear of the top, bottom and left edges,
+    // it stays put while the page content scrolls
+    <aside className="sticky top-2 my-2 ml-2 flex h-[calc(100vh-1rem)] w-60 shrink-0 flex-col overflow-y-auto rounded-lg border border-line bg-sidebar">
       <div className="px-5 pt-5 pb-4">
         <Logo className="block h-6 w-auto" />
       </div>
