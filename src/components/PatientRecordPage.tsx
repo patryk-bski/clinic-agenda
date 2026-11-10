@@ -2,7 +2,7 @@ import { ArrowLeft, Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { formatDate, statusOf, totalOf, type Invoice } from '../billing'
 import type { Appointment, InboxItem, Patient } from '../data'
-import { ageFrom, formatDay } from '../dates'
+import { ageFrom, formatDay, shortDayName } from '../dates'
 import { inboxKinds, shortTime } from '../inbox'
 import { formatMoney } from '../money'
 import { pageLinks } from '../navigation'
@@ -41,7 +41,8 @@ function Fact({ label, value, note }: { label: string; value: string; note?: str
 type Props = {
   patient: Patient
   now: Date
-  appointments: Appointment[] // today's, for this patient
+  today: string // YYYY-MM-DD
+  appointments: Appointment[] // this patient's, on any date
   visits: Visit[]
   notes: Note[]
   inboxItems: InboxItem[]
@@ -57,6 +58,7 @@ type Props = {
 export default function PatientRecordPage({
   patient,
   now,
+  today,
   appointments,
   visits,
   notes,
@@ -72,9 +74,15 @@ export default function PatientRecordPage({
   const [draft, setDraft] = useState('')
 
   const born = formatDay(patient.dateOfBirth)
-  // The next appointment still to come today (earlier ones have already happened)
+  // Today's and later appointments, earliest first
+  const upcoming = appointments
+    .filter((appt) => appt.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+  // The next one still to come (today's earlier ones have already happened)
   const currentTime = now.toTimeString().slice(0, 5) // "HH:MM"
-  const next = appointments.find((appt) => appt.status !== 'cancelled' && appt.time >= currentTime)
+  const next = upcoming.find(
+    (appt) => appt.status !== 'cancelled' && (appt.date > today || appt.time >= currentTime),
+  )
   const unpaid = invoices.filter((invoice) => statusOf(invoice, now) !== 'paid')
   const overdue = unpaid.filter((invoice) => statusOf(invoice, now) === 'overdue')
   const balance = unpaid.reduce((sum, invoice) => sum + totalOf(invoice), 0)
@@ -126,7 +134,7 @@ export default function PatientRecordPage({
         <Fact label="Last visit" value={formatDay(patient.lastVisit)} note={visits[0]?.type} />
         <Fact
           label="Next appointment"
-          value={next ? `Today at ${next.time}` : 'None booked'}
+          value={next ? `${shortDayName(next.date, today)} at ${next.time}` : 'None booked'}
           note={next?.type}
         />
         <Fact
@@ -142,13 +150,14 @@ export default function PatientRecordPage({
         />
       </div>
 
-      <Section title="Today" empty={appointments.length === 0 ? 'No appointments today.' : undefined}>
-        {appointments.map((appt) => (
+      <Section title="Upcoming" empty={upcoming.length === 0 ? 'No upcoming appointments.' : undefined}>
+        {upcoming.map((appt) => (
           <button
             key={appt.id}
             onClick={() => onOpenAppointment(appt)}
             className={`${rowClass} border-b border-line`}
           >
+            <span className="w-24 text-muted">{shortDayName(appt.date, today)}</span>
             <span className="w-12 text-muted tabular-nums">{appt.time}</span>
             <span className="flex-1">{appt.type}</span>
             <StatusBadge status={appt.status} />

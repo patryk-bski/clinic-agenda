@@ -1,27 +1,66 @@
+import { addDays, mondayOf } from './dates'
 import type { Status } from './status'
 
 export type Appointment = {
   id: number
-  time: string
+  date: string // YYYY-MM-DD
+  time: string // HH:MM
   patient: string
   type: string
   status: Status
 }
 
-// Fake data: today's appointments for one clinician, one for each patient below.
+type SampleAppointment = Omit<Appointment, 'id' | 'date'>
+
+// Fake data: today's appointments, one for each patient below.
 // The Reports screen counts these as today's appointments, so the two always agree.
-export const appointments: Appointment[] = [
-  { id: 1, time: '08:30', patient: 'Maria Kowalska', type: 'Follow-up', status: 'confirmed' },
-  { id: 2, time: '09:00', patient: 'James Carter', type: 'New patient', status: 'confirmed' },
-  { id: 3, time: '09:30', patient: 'Aisha Rahman', type: 'Blood test review', status: 'confirmed' },
-  { id: 4, time: '10:00', patient: 'Tomás Silva', type: 'Vaccination', status: 'confirmed' },
-  { id: 5, time: '10:30', patient: 'Emily Nguyen', type: 'Annual check-up', status: 'confirmed' },
-  { id: 6, time: '11:15', patient: 'Piotr Nowak', type: 'Prescription renewal', status: 'cancelled' },
-  { id: 7, time: '13:00', patient: 'Grace Okafor', type: 'Telehealth call', status: 'confirmed' },
-  { id: 8, time: '14:00', patient: 'Lucas Martin', type: 'Follow-up', status: 'waiting' },
-  { id: 9, time: '15:30', patient: 'Sofia Rossi', type: 'Follow-up', status: 'waiting' },
-  { id: 10, time: '16:15', patient: 'Daniel Becker', type: 'New patient', status: 'confirmed' },
+const todays: SampleAppointment[] = [
+  { time: '08:30', patient: 'Maria Kowalska', type: 'Follow-up', status: 'confirmed' },
+  { time: '09:00', patient: 'James Carter', type: 'New patient', status: 'confirmed' },
+  { time: '09:30', patient: 'Aisha Rahman', type: 'Blood test review', status: 'confirmed' },
+  { time: '10:00', patient: 'Tomás Silva', type: 'Vaccination', status: 'confirmed' },
+  { time: '10:30', patient: 'Emily Nguyen', type: 'Annual check-up', status: 'confirmed' },
+  { time: '11:15', patient: 'Piotr Nowak', type: 'Prescription renewal', status: 'cancelled' },
+  { time: '13:00', patient: 'Grace Okafor', type: 'Telehealth call', status: 'confirmed' },
+  { time: '14:00', patient: 'Lucas Martin', type: 'Follow-up', status: 'waiting' },
+  { time: '15:30', patient: 'Sofia Rossi', type: 'Follow-up', status: 'waiting' },
+  { time: '16:15', patient: 'Daniel Becker', type: 'New patient', status: 'confirmed' },
 ]
+
+// Fake data: appointments on other weekdays, by days after this week's Monday
+// (0–4 this week, 7–11 next week). Any that would land on today are skipped.
+const otherDays: [number, SampleAppointment][] = [
+  [0, { time: '09:00', patient: 'Lucas Martin', type: 'Blood test review', status: 'confirmed' }],
+  [0, { time: '11:30', patient: 'Grace Okafor', type: 'Follow-up', status: 'confirmed' }],
+  [0, { time: '15:00', patient: 'Daniel Becker', type: 'Follow-up', status: 'confirmed' }],
+  [2, { time: '08:30', patient: 'Piotr Nowak', type: 'Prescription renewal', status: 'confirmed' }],
+  [2, { time: '10:00', patient: 'Aisha Rahman', type: 'Follow-up', status: 'confirmed' }],
+  [2, { time: '14:30', patient: 'James Carter', type: 'Vaccination', status: 'waiting' }],
+  [3, { time: '09:30', patient: 'Sofia Rossi', type: 'Follow-up', status: 'confirmed' }],
+  [3, { time: '11:00', patient: 'Emily Nguyen', type: 'Blood test review', status: 'confirmed' }],
+  [3, { time: '16:00', patient: 'Maria Kowalska', type: 'Telehealth call', status: 'waiting' }],
+  [4, { time: '10:00', patient: 'Tomás Silva', type: 'Follow-up', status: 'confirmed' }],
+  [4, { time: '13:30', patient: 'Lucas Martin', type: 'Telehealth call', status: 'cancelled' }],
+  [7, { time: '09:00', patient: 'Grace Okafor', type: 'Annual check-up', status: 'confirmed' }],
+  [7, { time: '14:00', patient: 'Piotr Nowak', type: 'Follow-up', status: 'confirmed' }],
+  [8, { time: '10:30', patient: 'Maria Kowalska', type: 'Blood test review', status: 'confirmed' }],
+  [9, { time: '09:30', patient: 'Daniel Becker', type: 'Follow-up', status: 'waiting' }],
+  [9, { time: '15:00', patient: 'Aisha Rahman', type: 'Annual check-up', status: 'confirmed' }],
+  [10, { time: '11:00', patient: 'Emily Nguyen', type: 'Follow-up', status: 'confirmed' }],
+  [11, { time: '08:30', patient: 'James Carter', type: 'Follow-up', status: 'confirmed' }],
+]
+
+// All sample appointments, dated relative to today so they always look current
+export function sampleAppointments(today: string): Appointment[] {
+  const monday = mondayOf(today)
+  const dated = [
+    ...todays.map((appt) => ({ ...appt, date: today })),
+    ...otherDays
+      .map(([offset, appt]) => ({ ...appt, date: addDays(monday, offset) }))
+      .filter((appt) => appt.date !== today),
+  ]
+  return dated.map((appt, i) => ({ ...appt, id: i + 1 }))
+}
 
 export type Patient = {
   id: number

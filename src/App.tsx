@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, MotionConfig } from 'motion/react'
 import { useEffect, useState } from 'react'
-import AgendaPage from './components/AgendaPage'
+import AgendaPage, { type AgendaView } from './components/AgendaPage'
 import BillingPage from './components/billing/BillingPage'
 import InvoiceDialog from './components/billing/InvoiceDialog'
 import NewInvoiceDialog, { type NewInvoice } from './components/billing/NewInvoiceDialog'
@@ -15,13 +15,16 @@ import PatientsPage from './components/PatientsPage'
 import SettingsPage from './components/SettingsPage'
 import Sidebar from './components/Sidebar'
 import { sampleInvoices, type Invoice } from './billing'
-import { appointments, inboxItems, patients, type Appointment, type Patient } from './data'
+import { inboxItems, patients, sampleAppointments, type Appointment, type Patient } from './data'
+import { todayIso } from './dates'
 import { fade } from './motion'
 import { pageLinks, patientLink, useCurrentRoute } from './navigation'
 import { initialNotes, visitHistory, type Note } from './records'
 import { loadSettings, saveSettings, timeSlots } from './settings'
 
-const byTime = (a: Appointment, b: Appointment) => a.time.localeCompare(b.time)
+// Earliest first: by date, then by time
+const byDateTime = (a: Appointment, b: Appointment) =>
+  a.date.localeCompare(b.date) || a.time.localeCompare(b.time)
 
 export default function App() {
   // The screen to show; patientId is set when a patient's record is open (#/patients/3)
@@ -35,28 +38,35 @@ export default function App() {
 
   useEffect(() => saveSettings(settings), [settings])
 
+  // Today's date, read once when the app opens
+  const [today] = useState(todayIso)
+
   // The agenda starts with the fake data; bookings and edits are kept here (until the page reloads).
   // They live in App, not AgendaPage, so they survive switching to Patients and back.
-  const [todaysAppointments, setTodaysAppointments] = useState(appointments)
-  // The booking popup is open when this is set; `patient` pre-fills it (booking from a record)
-  const [booking, setBooking] = useState<{ patient?: string } | null>(null)
+  const [appointmentList, setAppointmentList] = useState(() => sampleAppointments(today).sort(byDateTime))
+  const todaysAppointments = appointmentList.filter((appt) => appt.date === today)
+  // Which day the Agenda shows, and whether as a single day or the whole week
+  const [agendaDate, setAgendaDate] = useState(today)
+  const [agendaView, setAgendaView] = useState<AgendaView>('day')
+  // The booking popup is open when this is set; it starts on `date`, and `patient` pre-fills it
+  const [booking, setBooking] = useState<{ date: string; patient?: string } | null>(null)
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const selected = todaysAppointments.find((appt) => appt.id === selectedId)
+  const selected = appointmentList.find((appt) => appt.id === selectedId)
 
   function bookAppointment(appointment: Omit<Appointment, 'id'>) {
-    setTodaysAppointments((list) => [...list, { ...appointment, id: Date.now() }].sort(byTime))
+    setAppointmentList((list) => [...list, { ...appointment, id: Date.now() }].sort(byDateTime))
     setBooking(null)
   }
 
   function updateAppointment(id: number, changes: Omit<Appointment, 'id'>) {
-    setTodaysAppointments((list) =>
-      list.map((appt) => (appt.id === id ? { ...changes, id } : appt)).sort(byTime),
+    setAppointmentList((list) =>
+      list.map((appt) => (appt.id === id ? { ...changes, id } : appt)).sort(byDateTime),
     )
     setSelectedId(null)
   }
 
   function deleteAppointment(id: number) {
-    setTodaysAppointments((list) => list.filter((appt) => appt.id !== id))
+    setAppointmentList((list) => list.filter((appt) => appt.id !== id))
     setSelectedId(null)
   }
 
@@ -187,13 +197,14 @@ export default function App() {
                     <PatientRecordPage
                       patient={recordPatient}
                       now={now}
-                      appointments={todaysAppointments.filter((appt) => appt.patient === recordPatient.name)}
+                      today={today}
+                      appointments={appointmentList.filter((appt) => appt.patient === recordPatient.name)}
                       visits={visitHistory[recordPatient.id] ?? []}
                       notes={notes[recordPatient.id] ?? []}
                       inboxItems={inbox.filter((item) => item.patient === recordPatient.name)}
                       invoices={invoices.filter((invoice) => invoice.patient === recordPatient.name)}
                       onEdit={() => setSelectedPatientId(recordPatient.id)}
-                      onBook={() => setBooking({ patient: recordPatient.name })}
+                      onBook={() => setBooking({ date: today, patient: recordPatient.name })}
                       onOpenAppointment={(appt) => setSelectedId(appt.id)}
                       onAddNote={(text) => addNote(recordPatient.id, text)}
                       onOpenInboxItem={(item) => openInboxItem(item.id)}
@@ -211,8 +222,13 @@ export default function App() {
                   <PatientsPage patients={patientList} />
                 ) : (
                   <AgendaPage
-                    appointments={todaysAppointments}
-                    onBook={() => setBooking({})}
+                    appointments={appointmentList}
+                    today={today}
+                    date={agendaDate}
+                    view={agendaView}
+                    onDateChange={setAgendaDate}
+                    onViewChange={setAgendaView}
+                    onBook={() => setBooking({ date: agendaDate })}
                     onSelect={(appt) => setSelectedId(appt.id)}
                     patientHref={patientHref}
                   />
@@ -228,6 +244,7 @@ export default function App() {
             <BookingDialog
               key="booking"
               times={bookableTimes}
+              date={booking.date}
               patient={booking.patient}
               onBook={bookAppointment}
               onClose={() => setBooking(null)}

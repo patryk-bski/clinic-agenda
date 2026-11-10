@@ -2,6 +2,7 @@ import { Trash2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useRef, useState } from 'react'
 import type { Appointment } from '../data'
+import { formatDay } from '../dates'
 import { readAppointmentForm } from '../formValues'
 import { fade } from '../motion'
 import AppointmentForm from './AppointmentForm'
@@ -43,8 +44,8 @@ export default function EditAppointmentDialog({
               Delete this appointment?
             </h2>
             <p className="mt-2 text-sm text-muted">
-              {appointment.patient}'s appointment at {appointment.time} will be removed from
-              today's agenda. This can't be undone.
+              {appointment.patient}'s appointment on {formatDay(appointment.date)} at{' '}
+              {appointment.time} will be removed from the agenda. This can't be undone.
             </p>
             <div className="mt-8 flex justify-end gap-2">
               <button

@@ -6,6 +6,7 @@ export function readAppointmentForm(form: HTMLFormElement): Omit<Appointment, 'i
   const data = new FormData(form)
   return {
     patient: String(data.get('patient')).trim(),
+    date: String(data.get('date')),
     time: String(data.get('time')),
     type: String(data.get('type')),
     // New bookings start as confirmed; edits keep whatever status was picked
