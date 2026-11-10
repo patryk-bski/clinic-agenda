@@ -1,4 +1,5 @@
 import { BarChart3, Calendar, Inbox, Settings, Users } from 'lucide-react'
+import { Fragment } from 'react'
 import { pageLinks, type Page } from '../navigation'
 import Logo from './Logo'
 
@@ -29,30 +30,33 @@ export default function Sidebar({ currentPage, clinicianName, specialty, unreadC
         {navItems.map(({ label, icon: Icon, page }) => {
           const isCurrent = page === currentPage
           return (
-            <a
-              key={label}
-              href={pageLinks[page]}
-              aria-current={isCurrent ? 'page' : undefined}
-              // The current screen also gets a dark bar on its left edge, so it doesn't rely on
-              // the faint gray background alone
-              className={`relative flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors hover:bg-hover ${
-                isCurrent
-                  ? 'bg-hover font-medium before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-ink'
-                  : 'text-muted'
-              }`}
-            >
-              <Icon size={16} strokeWidth={1.75} />
-              {label}
-              {/* How many inbox items haven't been opened yet */}
-              {page === 'inbox' && unreadCount > 0 && (
-                <span
-                  aria-label={`${unreadCount} unread`}
-                  className="ml-auto rounded-full bg-brand px-1.5 text-xs leading-5 font-medium text-white tabular-nums"
-                >
-                  {unreadCount}
-                </span>
-              )}
-            </a>
+            <Fragment key={label}>
+              {/* A divider sets Settings apart from the everyday screens above it */}
+              {page === 'settings' && <hr className="mx-3 my-2 border-line" />}
+              <a
+                href={pageLinks[page]}
+                aria-current={isCurrent ? 'page' : undefined}
+                // The current screen also gets a dark bar on its left edge, so it doesn't rely on
+                // the faint gray background alone
+                className={`relative flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors hover:bg-hover ${
+                  isCurrent
+                    ? 'bg-hover font-medium before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-ink'
+                    : 'text-muted'
+                }`}
+              >
+                <Icon size={16} strokeWidth={1.75} />
+                {label}
+                {/* How many inbox items haven't been opened yet */}
+                {page === 'inbox' && unreadCount > 0 && (
+                  <span
+                    aria-label={`${unreadCount} unread`}
+                    className="ml-auto rounded-full bg-brand px-1.5 text-xs leading-5 font-medium text-white tabular-nums"
+                  >
+                    {unreadCount}
+                  </span>
+                )}
+              </a>
+            </Fragment>
           )
         })}
       </nav>
