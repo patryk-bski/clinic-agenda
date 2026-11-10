@@ -1,4 +1,4 @@
-import { BarChart3, Calendar, Inbox, Settings, Users } from 'lucide-react'
+import { BarChart3, Calendar, Inbox, Receipt, Settings, Users } from 'lucide-react'
 import { Fragment } from 'react'
 import { pageLinks, type Page } from '../navigation'
 import Logo from './Logo'
@@ -7,6 +7,7 @@ const navItems: { label: string; icon: typeof Calendar; page: Page }[] = [
   { label: 'Agenda', icon: Calendar, page: 'agenda' },
   { label: 'Inbox', icon: Inbox, page: 'inbox' },
   { label: 'Patients', icon: Users, page: 'patients' },
+  { label: 'Billing', icon: Receipt, page: 'billing' },
   { label: 'Reports', icon: BarChart3, page: 'reports' },
   { label: 'Settings', icon: Settings, page: 'settings' },
 ]

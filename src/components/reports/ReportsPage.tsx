@@ -1,16 +1,10 @@
 import { useMemo, useState } from 'react'
 import type { Appointment } from '../../data'
+import { formatMoney } from '../../money'
 import { weeklyReport } from '../../report'
 import BarList from './BarList'
 import ChartCard from './ChartCard'
 import ColumnChart, { type Series } from './ColumnChart'
-
-const money = new Intl.NumberFormat('en-GB', {
-  style: 'currency',
-  currency: 'EUR',
-  maximumFractionDigits: 0,
-})
-const formatMoney = (value: number) => money.format(value)
 
 // Appointment outcomes, bottom to top in each day's column
 const outcomeSeries: Series[] = [
