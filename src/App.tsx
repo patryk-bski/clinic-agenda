@@ -23,7 +23,7 @@ export default function App() {
           </div>
           <button
             onClick={() => alert('Booking form coming soon')}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-xl bg-[#2563EB] px-6 py-3 text-base font-medium text-white hover:bg-[#1D4ED8]"
           >
             Book appointment
           </button>
