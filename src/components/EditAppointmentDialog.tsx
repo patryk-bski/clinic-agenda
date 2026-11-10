@@ -9,12 +9,19 @@ import Modal from './Modal'
 
 type Props = {
   appointment: Appointment
+  times: string[]
   onSave: (changes: Omit<Appointment, 'id'>) => void
   onDelete: () => void
   onClose: () => void
 }
 
-export default function EditAppointmentDialog({ appointment, onSave, onDelete, onClose }: Props) {
+export default function EditAppointmentDialog({
+  appointment,
+  times,
+  onSave,
+  onDelete,
+  onClose,
+}: Props) {
   const formRef = useRef<HTMLFormElement>(null)
   // What the form shows; holds unsaved edits while the delete question is on screen
   const [draft, setDraft] = useState<Omit<Appointment, 'id'>>(appointment)
@@ -75,6 +82,7 @@ export default function EditAppointmentDialog({ appointment, onSave, onDelete, o
             <AppointmentForm
               ref={formRef}
               initial={draft}
+              times={times}
               showStatus
               submitLabel="Save changes"
               onSubmit={onSave}

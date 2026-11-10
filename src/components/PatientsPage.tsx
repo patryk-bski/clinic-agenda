@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import type { Patient } from '../data'
 import { transition } from '../motion'
+import EditHint from './EditHint'
 
 // Dates are stored as YYYY-MM-DD; adding a time makes the browser read them in local time, not UTC
 const toLocalDate = (date: string) => new Date(`${date}T00:00`)
@@ -58,6 +59,8 @@ export default function PatientsPage({ patients, onSelect }: Props) {
         <span className="w-12">Age</span>
         <span className="w-40">Phone</span>
         <span className="w-28">Last visit</span>
+        {/* Same width as the edit pencil in each row */}
+        <span className="w-[15px]" />
       </div>
 
       <ul className="border-t border-line">
@@ -75,12 +78,13 @@ export default function PatientsPage({ patients, onSelect }: Props) {
               {/* The whole row is a button that opens the patient for editing */}
               <button
                 onClick={() => onSelect(patient)}
-                className="flex w-full items-center gap-8 px-2 py-3.5 text-left text-sm transition-colors hover:bg-hover/50 focus-visible:bg-hover/50 focus-visible:outline-none"
+                className="group flex w-full items-center gap-8 px-2 py-3.5 text-left text-sm transition-colors hover:bg-hover/50 focus-visible:bg-hover/50 focus-visible:outline-none"
               >
                 <span className="flex-1 font-medium">{patient.name}</span>
                 <span className="w-12 text-muted tabular-nums">{ageFrom(patient.dateOfBirth)}</span>
                 <span className="w-40 text-muted tabular-nums">{patient.phone}</span>
                 <span className="w-28 text-muted">{formatDate(patient.lastVisit)}</span>
+                <EditHint />
               </button>
             </motion.li>
           ))}
