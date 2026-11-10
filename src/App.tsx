@@ -1,6 +1,9 @@
 import { AnimatePresence, motion, MotionConfig } from 'motion/react'
 import { useEffect, useState } from 'react'
 import AgendaPage from './components/AgendaPage'
+import BillingPage from './components/billing/BillingPage'
+import InvoiceDialog from './components/billing/InvoiceDialog'
+import NewInvoiceDialog, { type NewInvoice } from './components/billing/NewInvoiceDialog'
 import BookingDialog from './components/BookingDialog'
 import ReportsPage from './components/reports/ReportsPage'
 import EditAppointmentDialog from './components/EditAppointmentDialog'
@@ -10,6 +13,7 @@ import InboxPage from './components/InboxPage'
 import PatientsPage from './components/PatientsPage'
 import SettingsPage from './components/SettingsPage'
 import Sidebar from './components/Sidebar'
+import { sampleInvoices, type Invoice } from './billing'
 import { appointments, inboxItems, patients, type Appointment, type Patient } from './data'
 import { fade } from './motion'
 import { useCurrentPage } from './navigation'
@@ -98,6 +102,27 @@ export default function App() {
     )
   }
 
+  // Billing: invoices are kept here (until the page reloads); payments and reminders aren't real
+  const [invoices, setInvoices] = useState(() => sampleInvoices(now))
+  const [openInvoiceId, setOpenInvoiceId] = useState<number | null>(null)
+  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false)
+  const openInvoice = invoices.find((invoice) => invoice.id === openInvoiceId)
+
+  const updateInvoice = (id: number, change: (invoice: Invoice) => Invoice) =>
+    setInvoices((list) => list.map((invoice) => (invoice.id === id ? change(invoice) : invoice)))
+
+  function createInvoice({ patient, payer, lines, dueInDays }: NewInvoice) {
+    const id = Math.max(0, ...invoices.map((invoice) => invoice.id)) + 1
+    const issued = new Date()
+    const due = new Date(issued.getTime() + dueInDays * 24 * 60 * 60 * 1000)
+    setInvoices((list) => [
+      ...list,
+      { id, number: `INV-${id}`, patient, payer, lines, issued, due, reminders: [] },
+    ])
+    setIsCreatingInvoice(false)
+    setOpenInvoiceId(id) // show the new invoice straight away
+  }
+
   return (
     // reducedMotion="user": people who turn off animations in their system settings get only simple fades
     <MotionConfig reducedMotion="user">
@@ -123,6 +148,13 @@ export default function App() {
                     now={now}
                     onOpen={(item) => openInboxItem(item.id)}
                     onMarkAllRead={() => setInbox((list) => list.map((item) => ({ ...item, read: true })))}
+                  />
+                ) : page === 'billing' ? (
+                  <BillingPage
+                    invoices={invoices}
+                    now={now}
+                    onOpen={(invoice) => setOpenInvoiceId(invoice.id)}
+                    onNew={() => setIsCreatingInvoice(true)}
                   />
                 ) : page === 'reports' ? (
                   <ReportsPage todaysAppointments={todaysAppointments} />
@@ -189,6 +221,38 @@ export default function App() {
               onMarkUnread={() => markUnread(openItem.id)}
               onReply={(to, body) => replyTo(openItem.id, to, body)}
               onClose={() => setOpenItemId(null)}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {openInvoice && (
+            <InvoiceDialog
+              key={openInvoice.id}
+              invoice={openInvoice}
+              now={now}
+              onMarkPaid={(method) =>
+                updateInvoice(openInvoice.id, (invoice) => ({ ...invoice, paid: { on: new Date(), method } }))
+              }
+              onMarkUnpaid={() => updateInvoice(openInvoice.id, (invoice) => ({ ...invoice, paid: undefined }))}
+              onSendReminder={() =>
+                updateInvoice(openInvoice.id, (invoice) => ({
+                  ...invoice,
+                  reminders: [...invoice.reminders, new Date()],
+                }))
+              }
+              onClose={() => setOpenInvoiceId(null)}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isCreatingInvoice && (
+            <NewInvoiceDialog
+              key="new-invoice"
+              patientNames={patientList.map((patient) => patient.name)}
+              onCreate={createInvoice}
+              onClose={() => setIsCreatingInvoice(false)}
             />
           )}
         </AnimatePresence>
