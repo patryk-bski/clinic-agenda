@@ -1,4 +1,7 @@
-import type { ReactNode } from 'react'
+import { Check } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { fade } from '../motion'
 import { slotLengths, timeSlots, workingHourOptions, type Settings } from '../settings'
 
 const fieldClass =
@@ -27,19 +30,71 @@ type Props = {
   onChange: (settings: Settings) => void
 }
 
-// Changes apply straight away, so there's no Save button
-export default function SettingsPage({ settings, onChange }: Props) {
-  const update = (changes: Partial<Settings>) => onChange({ ...settings, ...changes })
+// Edits are made to a draft; nothing in the app changes until you press Save changes
+export default function SettingsPage({ settings: saved, onChange }: Props) {
+  const [settings, setDraft] = useState(saved)
+  const [justSaved, setJustSaved] = useState(false)
+  const update = (changes: Partial<Settings>) => setDraft((draft) => ({ ...draft, ...changes }))
+
+  const hasChanges = (Object.keys(saved) as (keyof Settings)[]).some((key) => settings[key] !== saved[key])
+
+  function save(e: FormEvent) {
+    e.preventDefault()
+    if (!hasChanges) return
+    onChange(settings)
+    setJustSaved(true)
+  }
+
+  // The "Saved" confirmation fades away after a couple of seconds
+  useEffect(() => {
+    if (!justSaved) return
+    const timer = setTimeout(() => setJustSaved(false), 2000)
+    return () => clearTimeout(timer)
+  }, [justSaved])
 
   const start = toMinutes(settings.dayStart)
   const end = toMinutes(settings.dayEnd)
   const slots = timeSlots(settings)
 
   return (
-    <>
-      <header className="mb-10">
-        <h1 className="text-4xl font-semibold tracking-tight">Settings</h1>
-        <p className="mt-2 text-sm text-muted">Your profile and working hours</p>
+    // A form, so pressing Enter in a field also saves
+    <form onSubmit={save}>
+      <header className="mb-10 flex items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-semibold tracking-tight">Settings</h1>
+          <p className="mt-2 text-sm text-muted">Your profile and working hours</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <AnimatePresence mode="wait" initial={false}>
+            {hasChanges ? (
+              <motion.span key="unsaved" className="text-sm text-muted" {...fade}>
+                Unsaved changes
+              </motion.span>
+            ) : justSaved ? (
+              <motion.span key="saved" role="status" className="flex items-center gap-1 text-sm text-green-700" {...fade}>
+                <Check size={15} strokeWidth={2} aria-hidden />
+                Saved
+              </motion.span>
+            ) : null}
+          </AnimatePresence>
+          {hasChanges && (
+            <button
+              type="button"
+              onClick={() => setDraft(saved)}
+              // Ghost button: no fill, a gray outline (3.2:1) so it still reads as a button
+              className="rounded-[6px] border border-field px-3 py-2 text-sm transition-colors hover:bg-hover"
+            >
+              Discard
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={!hasChanges}
+            className="rounded-[6px] bg-brand px-3 py-2 text-sm text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand"
+          >
+            Save changes
+          </button>
+        </div>
       </header>
 
       <section className="mb-12">
@@ -118,6 +173,6 @@ export default function SettingsPage({ settings, onChange }: Props) {
           {slots.length === 1 ? 'slot' : 'slots'} a day
         </p>
       </section>
-    </>
+    </form>
   )
 }
