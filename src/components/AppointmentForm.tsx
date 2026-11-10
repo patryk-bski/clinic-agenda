@@ -66,17 +66,39 @@ export default function AppointmentForm({
           />
         </label>
 
-        <label className="block text-sm">
-          Time
-          <select name="time" required defaultValue={initial?.time ?? ''} className={fieldClass}>
-            <option value="" disabled>
-              Select a time
-            </option>
-            {times.map((time) => (
-              <option key={time}>{time}</option>
-            ))}
-          </select>
-        </label>
+        {/* Date and time side by side */}
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block text-sm">
+            Date
+            <input
+              name="date"
+              type="date"
+              required
+              defaultValue={initial?.date}
+              // Open the calendar from a click anywhere on the field, not just its icon
+              onClick={(e) => {
+                try {
+                  e.currentTarget.showPicker()
+                } catch {
+                  // Older browsers without showPicker() still let you type the date
+                }
+              }}
+              className={`${fieldClass} cursor-pointer`}
+            />
+          </label>
+
+          <label className="block text-sm">
+            Time
+            <select name="time" required defaultValue={initial?.time ?? ''} className={fieldClass}>
+              <option value="" disabled>
+                Select a time
+              </option>
+              {times.map((time) => (
+                <option key={time}>{time}</option>
+              ))}
+            </select>
+          </label>
+        </div>
 
         <label className="block text-sm">
           Appointment type

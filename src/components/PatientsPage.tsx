@@ -53,12 +53,14 @@ function SortButton({
           ? `Sort by ${label.toLowerCase()}. Sorted ${directionWords[column][sort.direction]}`
           : `Sort by ${label.toLowerCase()}`
       }
-      className={`-mx-1 flex items-center gap-1 rounded px-1 transition-colors hover:text-ink ${
-        isActive ? 'font-medium text-ink' : ''
+      // A light grey pill (darker for the column being sorted). The negative margin cancels the
+      // padding, so the label still lines up with the values in the column below
+      className={`-mx-2 flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-sm whitespace-nowrap transition-colors hover:bg-line hover:text-ink ${
+        isActive ? 'bg-line font-medium text-ink' : 'bg-hover'
       }`}
     >
       {label}
-      <Arrow size={12} strokeWidth={2} aria-hidden className={isActive ? '' : 'opacity-50'} />
+      <Arrow size={14} strokeWidth={2} aria-hidden className={isActive ? '' : 'opacity-60'} />
     </button>
   )
 }
@@ -107,11 +109,13 @@ export default function PatientsPage({ patients }: Props) {
       </label>
 
       {/* Column labels, lined up with the columns in each row; click one to sort by it */}
-      <div className="flex gap-8 px-2 pb-2 text-xs text-muted">
+      <div className="flex items-center gap-8 px-2 pb-2 text-sm text-muted">
         <span className="flex-1">
-          <SortButton column="name" label="Name" sort={sort} onSort={sortBy} />
+          <span className="inline-flex">
+            <SortButton column="name" label="Name" sort={sort} onSort={sortBy} />
+          </span>
         </span>
-        <span className="w-12">
+        <span className="w-16">
           <SortButton column="age" label="Age" sort={sort} onSort={sortBy} />
         </span>
         <span className="w-40">Phone</span>
@@ -140,7 +144,7 @@ export default function PatientsPage({ patients }: Props) {
                 className="group flex w-full items-center gap-8 px-2 py-3.5 text-left text-sm transition-colors hover:bg-hover/50 focus-visible:bg-hover/50 focus-visible:-outline-offset-2"
               >
                 <span className="flex-1 font-medium">{patient.name}</span>
-                <span className="w-12 text-muted tabular-nums">{ageFrom(patient.dateOfBirth)}</span>
+                <span className="w-16 text-muted tabular-nums">{ageFrom(patient.dateOfBirth)}</span>
                 <span className="w-40 text-muted tabular-nums">{patient.phone}</span>
                 <span className="w-28 text-muted">{formatDay(patient.lastVisit)}</span>
                 <EditHint icon={ArrowRight} />

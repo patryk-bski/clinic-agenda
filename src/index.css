@@ -28,6 +28,12 @@
   --color-chart-rest: #8f8e89; /* bars that aren't the highlighted one */
 }
 
+/* Always keep room for the scrollbar, so the layout doesn't shift sideways when a page
+   (e.g. a busy week) becomes tall enough to scroll, or stops needing to */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   @apply bg-page font-sans text-ink antialiased;
 }
