@@ -1,27 +1,36 @@
-const navItems = ['Agenda', 'Patients', 'Messages', 'Reports', 'Settings']
+import { BarChart3, Calendar, MessageSquare, Settings, Users } from 'lucide-react'
+
+const navItems = [
+  { label: 'Agenda', icon: Calendar },
+  { label: 'Patients', icon: Users },
+  { label: 'Messages', icon: MessageSquare },
+  { label: 'Reports', icon: BarChart3 },
+  { label: 'Settings', icon: Settings },
+]
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-60 shrink-0 flex-col bg-slate-900 text-slate-200">
-      <div className="px-6 py-5 text-lg font-semibold text-white">Clinic Agenda</div>
+    <aside className="flex w-60 shrink-0 flex-col border-r border-line bg-sidebar">
+      <div className="px-5 pt-5 pb-4 text-sm font-semibold">Clinic Agenda</div>
 
-      <nav className="flex-1 px-3">
-        {navItems.map((item) => (
+      <nav className="flex-1 space-y-0.5 px-2">
+        {navItems.map(({ label, icon: Icon }) => (
           <a
-            key={item}
+            key={label}
             href="#"
-            className={`block rounded-md px-3 py-2 text-sm ${
-              item === 'Agenda' ? 'bg-slate-700 text-white' : 'hover:bg-slate-800'
+            className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm hover:bg-hover ${
+              label === 'Agenda' ? 'bg-hover font-medium' : 'text-muted'
             }`}
           >
-            {item}
+            <Icon size={16} strokeWidth={1.75} />
+            {label}
           </a>
         ))}
       </nav>
 
-      <div className="border-t border-slate-700 px-6 py-4 text-sm">
-        <div className="font-medium text-white">Dr. Anna Lewis</div>
-        <div className="text-slate-400">General Practice</div>
+      <div className="px-5 py-4 text-sm">
+        <div className="font-medium">Dr. Anna Lewis</div>
+        <div className="text-muted">General Practice</div>
       </div>
     </aside>
   )
