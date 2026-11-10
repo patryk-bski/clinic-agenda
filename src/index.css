@@ -15,3 +15,12 @@
 body {
   @apply bg-page font-sans text-ink antialiased;
 }
+
+/* Every clickable button and dropdown shows the pointing hand (Tailwind resets buttons to the plain arrow) */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled),
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+}
