@@ -151,10 +151,10 @@ export default function EditPatientDialog({ patient, onSave, onDelete, onClose }
 
                 <label className="block text-sm">
                   Last visit
+                  {/* Can be left empty for a patient who hasn't been seen yet */}
                   <input
                     name="lastVisit"
                     type="date"
-                    required
                     max={today}
                     defaultValue={draft.lastVisit}
                     onClick={openPicker}

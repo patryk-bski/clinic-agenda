@@ -67,7 +67,7 @@ export type Patient = {
   name: string
   dateOfBirth: string // YYYY-MM-DD
   phone: string
-  lastVisit: string // YYYY-MM-DD
+  lastVisit: string // YYYY-MM-DD, or '' for a new patient who hasn't been seen yet
 }
 
 // Fake data: the clinician's patients (phone numbers are from a range reserved for fiction)

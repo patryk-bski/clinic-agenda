@@ -6,6 +6,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   Search,
+  UserPlus,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
@@ -85,9 +86,10 @@ function SortButton({
 
 type Props = {
   patients: Patient[]
+  onNew: () => void
 }
 
-export default function PatientsPage({ patients }: Props) {
+export default function PatientsPage({ patients, onNew }: Props) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<Sort>({ key: 'name', direction: 'asc' })
 
@@ -104,14 +106,22 @@ export default function PatientsPage({ patients }: Props) {
     )
   }
 
-
   return (
     <>
-      <header className="mb-10">
-        <h1 className="text-4xl font-semibold tracking-tight">Patients</h1>
-        <p className="mt-2 text-sm text-muted">
-          {patients.length} {patients.length === 1 ? 'patient' : 'patients'}
-        </p>
+      <header className="mb-10 flex items-end justify-between">
+        <div>
+          <h1 className="text-4xl font-semibold tracking-tight">Patients</h1>
+          <p className="mt-2 text-sm text-muted">
+            {patients.length} {patients.length === 1 ? 'patient' : 'patients'}
+          </p>
+        </div>
+        <button
+          onClick={onNew}
+          className="flex items-center gap-1.5 rounded-[6px] bg-brand px-3 py-2 text-sm text-white transition-colors hover:bg-brand-hover"
+        >
+          <UserPlus size={15} strokeWidth={1.75} />
+          New patient
+        </button>
       </header>
 
       <label className="mb-6 flex items-center gap-2 rounded-[6px] border border-field bg-white px-2.5 py-2 text-sm transition-colors focus-within:border-ink">
@@ -164,7 +174,9 @@ export default function PatientsPage({ patients }: Props) {
                 <span className="flex-1 font-medium">{patient.name}</span>
                 <span className="w-16 text-muted tabular-nums">{ageFrom(patient.dateOfBirth)}</span>
                 <span className="w-40 text-muted tabular-nums">{patient.phone}</span>
-                <span className="w-28 text-muted">{formatDay(patient.lastVisit)}</span>
+                <span className="w-28 text-muted">
+                  {patient.lastVisit ? formatDay(patient.lastVisit) : 'Not yet'}
+                </span>
                 <EditHint icon={ArrowRight} />
               </a>
             </motion.li>
