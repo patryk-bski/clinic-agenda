@@ -149,7 +149,11 @@ export default function PatientRecordPage({
       </header>
 
       <div className="mb-10 grid gap-4 sm:grid-cols-3">
-        <Fact label="Last visit" value={formatDay(patient.lastVisit)} note={visits[0]?.type} />
+        <Fact
+          label="Last visit"
+          value={patient.lastVisit ? formatDay(patient.lastVisit) : 'Not yet'}
+          note={patient.lastVisit ? visits[0]?.type : 'New patient'}
+        />
         <Fact
           label="Next appointment"
           value={next ? `${shortDayName(next.date, today)} at ${next.time}` : 'None booked'}

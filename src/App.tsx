@@ -11,6 +11,7 @@ import EditPatientDialog from './components/EditPatientDialog'
 import InboxItemDialog from './components/InboxItemDialog'
 import InboxPage from './components/InboxPage'
 import NewMessageDialog from './components/NewMessageDialog'
+import NewPatientDialog from './components/NewPatientDialog'
 import SentMessageDialog from './components/SentMessageDialog'
 import PatientRecordPage from './components/PatientRecordPage'
 import PatientsPage from './components/PatientsPage'
@@ -88,6 +89,17 @@ export default function App() {
   function updatePatient(id: number, changes: Omit<Patient, 'id'>) {
     setPatientList((list) => list.map((patient) => (patient.id === id ? { ...changes, id } : patient)))
     setSelectedPatientId(null)
+  }
+
+  // "New patient" on the Patients screen
+  const [isAddingPatient, setIsAddingPatient] = useState(false)
+
+  function addPatient(patient: Omit<Patient, 'id'>) {
+    const id = Math.max(0, ...patientList.map((p) => p.id)) + 1
+    setPatientList((list) => [...list, { ...patient, id }])
+    setIsAddingPatient(false)
+    // Open the new patient's record straight away, ready to book or add notes
+    window.location.hash = patientLink(id)
   }
 
   function deletePatient(id: number) {
@@ -254,7 +266,7 @@ export default function App() {
                     </div>
                   )
                 ) : page === 'patients' ? (
-                  <PatientsPage patients={patientList} />
+                  <PatientsPage patients={patientList} onNew={() => setIsAddingPatient(true)} />
                 ) : (
                   <AgendaPage
                     appointments={appointmentList}
@@ -324,6 +336,17 @@ export default function App() {
               onMarkUnread={() => markUnread(openItem.id)}
               onReply={(to, body) => replyTo(openItem.id, to, body)}
               onClose={() => setOpenItemId(null)}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isAddingPatient && (
+            <NewPatientDialog
+              key="new-patient"
+              existingNames={patientList.map((patient) => patient.name)}
+              onAdd={addPatient}
+              onClose={() => setIsAddingPatient(false)}
             />
           )}
         </AnimatePresence>
