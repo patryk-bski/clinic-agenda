@@ -1,4 +1,12 @@
-import { ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, Search } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowDownAZ,
+  ArrowDownZA,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
+  Search,
+} from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import type { Patient } from '../data'
@@ -44,7 +52,17 @@ function SortButton({
   onSort: (column: SortKey) => void
 }) {
   const isActive = sort.key === column
-  const Arrow = !isActive ? ArrowUpDown : sort.direction === 'asc' ? ArrowUp : ArrowDown
+  // Name is alphabetical, so it shows A→Z / Z→A; the other columns show plain arrows
+  const Arrow =
+    column === 'name'
+      ? isActive && sort.direction === 'desc'
+        ? ArrowDownZA
+        : ArrowDownAZ
+      : !isActive
+        ? ArrowUpDown
+        : sort.direction === 'asc'
+          ? ArrowUp
+          : ArrowDown
   return (
     <button
       onClick={() => onSort(column)}
