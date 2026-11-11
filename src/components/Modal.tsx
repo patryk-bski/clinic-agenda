@@ -18,8 +18,12 @@ export default function Modal({ labelledBy, onClose, children }: Props) {
     const dialog = dialogRef.current
     if (!dialog || dialog.open) return
     dialog.showModal()
-    // Start in the first field (e.g. Patient name) rather than the first button, like Delete
-    dialog.querySelector<HTMLElement>('input, select, textarea')?.focus()
+    // Start in the first field (e.g. Patient name) rather than the first button, like Delete.
+    // A form can pick a different starting field by marking it with data-autofocus.
+    const start =
+      dialog.querySelector<HTMLElement>('[data-autofocus]') ??
+      dialog.querySelector<HTMLElement>('input, select, textarea')
+    start?.focus()
   }, [])
 
   return (
