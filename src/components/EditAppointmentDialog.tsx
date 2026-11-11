@@ -11,6 +11,7 @@ import Modal from './Modal'
 type Props = {
   appointment: Appointment
   times: string[]
+  patients: string[]
   onSave: (changes: Omit<Appointment, 'id'>) => void
   onDelete: () => void
   onClose: () => void
@@ -19,6 +20,7 @@ type Props = {
 export default function EditAppointmentDialog({
   appointment,
   times,
+  patients,
   onSave,
   onDelete,
   onClose,
@@ -84,6 +86,7 @@ export default function EditAppointmentDialog({
               ref={formRef}
               initial={draft}
               times={times}
+              patients={patients}
               showStatus
               submitLabel="Save changes"
               onSubmit={onSave}

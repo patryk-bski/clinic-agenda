@@ -228,7 +228,8 @@ export default function App() {
                     view={agendaView}
                     onDateChange={setAgendaDate}
                     onViewChange={setAgendaView}
-                    onBook={() => setBooking({ date: agendaDate })}
+                    // Books on the given day (from a day's "+" in Week view), or the day shown
+                    onBook={(day) => setBooking({ date: day ?? agendaDate })}
                     onSelect={(appt) => setSelectedId(appt.id)}
                     patientHref={patientHref}
                   />
@@ -244,6 +245,7 @@ export default function App() {
             <BookingDialog
               key="booking"
               times={bookableTimes}
+              patients={patientList.map((patient) => patient.name)}
               date={booking.date}
               patient={booking.patient}
               onBook={bookAppointment}
@@ -258,6 +260,7 @@ export default function App() {
               key={selected.id}
               appointment={selected}
               times={bookableTimes}
+              patients={patientList.map((patient) => patient.name)}
               onSave={(changes) => updateAppointment(selected.id, changes)}
               onDelete={() => deleteAppointment(selected.id)}
               onClose={() => setSelectedId(null)}

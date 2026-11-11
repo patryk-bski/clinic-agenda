@@ -21,6 +21,8 @@ type Props = {
   initial?: Partial<Omit<Appointment, 'id'>>
   // Bookable times, from the working hours in Settings
   times: string[]
+  // The practice's patients, so every appointment belongs to one of them
+  patients: string[]
   showStatus?: boolean
   submitLabel: string
   onSubmit: (appointment: Omit<Appointment, 'id'>) => void
@@ -32,6 +34,7 @@ type Props = {
 export default function AppointmentForm({
   initial,
   times: bookableTimes,
+  patients,
   showStatus,
   submitLabel,
   onSubmit,
@@ -44,6 +47,12 @@ export default function AppointmentForm({
       ? [...bookableTimes, initial.time].sort()
       : bookableTimes
 
+  // Patients A to Z; an existing appointment's patient stays an option even if they've since
+  // been removed from the list, so editing never loses the name
+  const patientOptions = [
+    ...new Set([...patients, ...(initial?.patient ? [initial.patient] : [])]),
+  ].sort((a, b) => a.localeCompare(b))
+
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     onSubmit(readAppointmentForm(e.currentTarget))
@@ -53,17 +62,21 @@ export default function AppointmentForm({
     <form ref={ref} onSubmit={handleSubmit}>
       <div className="space-y-4">
         <label className="block text-sm">
-          Patient name
-          <input
+          Patient
+          <select
             name="patient"
             required
             autoFocus
-            pattern=".*\S.*"
-            title="Enter the patient's name"
-            placeholder="e.g. Jane Doe"
-            defaultValue={initial?.patient}
+            defaultValue={initial?.patient ?? ''}
             className={fieldClass}
-          />
+          >
+            <option value="" disabled>
+              Select a patient
+            </option>
+            {patientOptions.map((name) => (
+              <option key={name}>{name}</option>
+            ))}
+          </select>
         </label>
 
         {/* Date and time side by side */}
