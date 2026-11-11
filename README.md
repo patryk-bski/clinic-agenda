@@ -2,6 +2,8 @@
 
 **A calm workspace for clinicians: agenda, inbox, patient records, billing and reports in one place.**
 
+**[Try the live demo →](https://dart-clinic.vercel.app/)**
+
 Dart is a design and front-end prototype of the software a general practitioner works in all day. It's built to feel quiet and fast, to show dense information without feeling crowded, and to hold up next to the best tools outside healthcare.
 
 > This is a portfolio project. All patients, clinicians and results are fictional, and nothing is sent or stored on a server.
