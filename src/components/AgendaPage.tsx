@@ -67,7 +67,8 @@ type Props = {
   view: AgendaView
   onDateChange: (date: string) => void
   onViewChange: (view: AgendaView) => void
-  onBook: () => void
+  // Opens the booking form, on `day` if given (a day's "+" in Week view)
+  onBook: (day?: string) => void
   onSelect: (appointment: Appointment) => void
   patientHref: (name: string) => string | undefined
 }
@@ -154,7 +155,7 @@ export default function AgendaPage({
             </motion.h1>
           </AnimatePresence>
         </div>
-        <BookButton onClick={onBook} />
+        <BookButton onClick={() => onBook()} />
       </header>
 
       {/* Move between days or weeks, and switch between the two views */}
@@ -249,6 +250,7 @@ export default function AgendaPage({
                 today={today}
                 appointments={weekAppointments}
                 onSelect={onSelect}
+                onBookDay={onBook}
                 onOpenDay={(day) => {
                   onDateChange(day)
                   onViewChange('day')
@@ -321,7 +323,6 @@ export default function AgendaPage({
                 title={
                   date === today ? 'No appointments today' : `No appointments on ${longDate(date)}`
                 }
-                onBook={onBook}
               />
             </motion.div>
           )}
