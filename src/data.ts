@@ -113,6 +113,15 @@ export type Reply = {
   sentAt: Date
 }
 
+// A message you wrote from scratch with "New message"; kept in the app, not actually sent anywhere
+export type SentMessage = {
+  id: number
+  to: string // a patient's name
+  subject: string
+  body: string
+  sentAt: Date
+}
+
 // Fake data: messages from patients, lab results and referral letters, newest first.
 // Clinicians and hospitals here are made up.
 export const inboxItems: InboxItem[] = [

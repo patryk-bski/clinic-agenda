@@ -1,9 +1,9 @@
-import { ArrowLeft, Pencil, Plus } from 'lucide-react'
+import { ArrowLeft, Pencil, Plus, Send } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { formatDate, statusOf, totalOf, type Invoice } from '../billing'
-import type { Appointment, InboxItem, Patient } from '../data'
+import type { Appointment, InboxItem, Patient, SentMessage } from '../data'
 import { ageFrom, formatDay, shortDayName } from '../dates'
-import { inboxKinds, shortTime } from '../inbox'
+import { inboxKinds, receivedAt, shortDate } from '../inbox'
 import { formatMoney } from '../money'
 import { pageLinks } from '../navigation'
 import type { Note, Visit } from '../records'
@@ -46,12 +46,15 @@ type Props = {
   visits: Visit[]
   notes: Note[]
   inboxItems: InboxItem[]
+  sentMessages: SentMessage[] // messages you wrote to this patient
   invoices: Invoice[]
   onEdit: () => void
   onBook: () => void
+  onMessage: () => void
   onOpenAppointment: (appointment: Appointment) => void
   onAddNote: (text: string) => void
   onOpenInboxItem: (item: InboxItem) => void
+  onOpenSentMessage: (message: SentMessage) => void
   onOpenInvoice: (invoice: Invoice) => void
 }
 
@@ -63,12 +66,15 @@ export default function PatientRecordPage({
   visits,
   notes,
   inboxItems,
+  sentMessages,
   invoices,
   onEdit,
   onBook,
+  onMessage,
   onOpenAppointment,
   onAddNote,
   onOpenInboxItem,
+  onOpenSentMessage,
   onOpenInvoice,
 }: Props) {
   const [draft, setDraft] = useState('')
@@ -87,6 +93,11 @@ export default function PatientRecordPage({
   const overdue = unpaid.filter((invoice) => statusOf(invoice, now) === 'overdue')
   const balance = unpaid.reduce((sum, invoice) => sum + totalOf(invoice), 0)
   const sortedInvoices = [...invoices].sort((a, b) => b.issued.getTime() - a.issued.getTime())
+  // What came in about this patient and what you wrote to them, newest first
+  const correspondence: { item?: InboxItem; message?: SentMessage; at: Date }[] = [
+    ...inboxItems.map((item) => ({ item, at: receivedAt(item, now) })),
+    ...sentMessages.map((message) => ({ message, at: message.sentAt })),
+  ].sort((a, b) => b.at.getTime() - a.at.getTime())
 
   function addNote(e: FormEvent) {
     e.preventDefault()
@@ -119,6 +130,13 @@ export default function PatientRecordPage({
           >
             <Pencil size={14} strokeWidth={1.75} />
             Edit details
+          </button>
+          <button
+            onClick={onMessage}
+            className="flex items-center gap-1.5 rounded-[6px] bg-hover px-3 py-2 text-sm transition-colors hover:bg-line"
+          >
+            <Send size={14} strokeWidth={1.75} />
+            Message
           </button>
           <button
             onClick={onBook}
@@ -210,9 +228,26 @@ export default function PatientRecordPage({
 
       <Section
         title="Inbox"
-        empty={inboxItems.length === 0 ? 'No messages, results or letters.' : undefined}
+        empty={correspondence.length === 0 ? 'No messages, results or letters.' : undefined}
       >
-        {inboxItems.map((item) => {
+        {correspondence.map(({ item, message, at }) => {
+          if (message) {
+            return (
+              <button
+                key={`sent-${message.id}`}
+                onClick={() => onOpenSentMessage(message)}
+                className={`${rowClass} border-b border-line`}
+              >
+                <Send size={16} strokeWidth={1.75} className="shrink-0 text-muted" aria-hidden />
+                <span className="min-w-0 flex-1 truncate">
+                  <span className="text-muted">You wrote: </span>
+                  {message.subject}
+                </span>
+                <span className="w-20 shrink-0 text-right text-muted tabular-nums">{shortDate(at, now)}</span>
+              </button>
+            )
+          }
+          if (!item) return null
           const Icon = inboxKinds[item.kind].icon
           return (
             <button key={item.id} onClick={() => onOpenInboxItem(item)} className={`${rowClass} border-b border-line`}>
@@ -221,7 +256,7 @@ export default function PatientRecordPage({
                 <span className="sr-only">{inboxKinds[item.kind].label}: </span>
                 {item.subject}
               </span>
-              <span className="w-20 shrink-0 text-right text-muted tabular-nums">{shortTime(item, now)}</span>
+              <span className="w-20 shrink-0 text-right text-muted tabular-nums">{shortDate(at, now)}</span>
             </button>
           )
         })}

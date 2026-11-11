@@ -10,12 +10,22 @@ import EditAppointmentDialog from './components/EditAppointmentDialog'
 import EditPatientDialog from './components/EditPatientDialog'
 import InboxItemDialog from './components/InboxItemDialog'
 import InboxPage from './components/InboxPage'
+import NewMessageDialog from './components/NewMessageDialog'
+import SentMessageDialog from './components/SentMessageDialog'
 import PatientRecordPage from './components/PatientRecordPage'
 import PatientsPage from './components/PatientsPage'
 import SettingsPage from './components/SettingsPage'
 import Sidebar from './components/Sidebar'
 import { sampleInvoices, type Invoice } from './billing'
-import { inboxItems, patients, sampleAppointments, type Appointment, type Patient } from './data'
+import {
+  inboxItems,
+  patients,
+  sampleAppointments,
+  type Appointment,
+  type Patient,
+  type SentMessage,
+} from './data'
+import { sentEntries, type SentEntry } from './inbox'
 import { todayIso } from './dates'
 import { fade } from './motion'
 import { pageLinks, patientLink, useCurrentRoute } from './navigation'
@@ -136,6 +146,25 @@ export default function App() {
     )
   }
 
+  // Messages you write from scratch: kept here (until the page reloads); they aren't sent anywhere
+  const [sentMessages, setSentMessages] = useState<SentMessage[]>([])
+  // The "New message" form, with the patient filled in when opened from their record
+  const [composing, setComposing] = useState<{ to?: string } | null>(null)
+  const [openSentId, setOpenSentId] = useState<number | null>(null)
+  const openSent = sentMessages.find((message) => message.id === openSentId)
+  const sent = sentEntries(inbox, sentMessages)
+
+  function sendMessage(message: Omit<SentMessage, 'id' | 'sentAt'>) {
+    setSentMessages((list) => [...list, { ...message, id: Date.now(), sentAt: new Date() }])
+    setComposing(null)
+  }
+
+  // A sent row opens the message itself, or for a reply the inbox item it answers
+  function openSentEntry(entry: SentEntry) {
+    if (entry.message) setOpenSentId(entry.message.id)
+    else if (entry.item) openInboxItem(entry.item.id)
+  }
+
   // Billing: invoices are kept here (until the page reloads); payments and reminders aren't real
   const [invoices, setInvoices] = useState(() => sampleInvoices(now))
   const [openInvoiceId, setOpenInvoiceId] = useState<number | null>(null)
@@ -179,9 +208,12 @@ export default function App() {
                 ) : page === 'inbox' ? (
                   <InboxPage
                     items={inbox}
+                    sent={sent}
                     now={now}
                     onOpen={(item) => openInboxItem(item.id)}
+                    onOpenSent={openSentEntry}
                     onMarkAllRead={() => setInbox((list) => list.map((item) => ({ ...item, read: true })))}
+                    onNewMessage={() => setComposing({})}
                   />
                 ) : page === 'billing' ? (
                   <BillingPage
@@ -202,12 +234,15 @@ export default function App() {
                       visits={visitHistory[recordPatient.id] ?? []}
                       notes={notes[recordPatient.id] ?? []}
                       inboxItems={inbox.filter((item) => item.patient === recordPatient.name)}
+                      sentMessages={sentMessages.filter((message) => message.to === recordPatient.name)}
                       invoices={invoices.filter((invoice) => invoice.patient === recordPatient.name)}
                       onEdit={() => setSelectedPatientId(recordPatient.id)}
                       onBook={() => setBooking({ date: today, patient: recordPatient.name })}
                       onOpenAppointment={(appt) => setSelectedId(appt.id)}
                       onAddNote={(text) => addNote(recordPatient.id, text)}
                       onOpenInboxItem={(item) => openInboxItem(item.id)}
+                      onMessage={() => setComposing({ to: recordPatient.name })}
+                      onOpenSentMessage={(message) => setOpenSentId(message.id)}
                       onOpenInvoice={(invoice) => setOpenInvoiceId(invoice.id)}
                     />
                   ) : (
@@ -290,6 +325,24 @@ export default function App() {
               onReply={(to, body) => replyTo(openItem.id, to, body)}
               onClose={() => setOpenItemId(null)}
             />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {composing && (
+            <NewMessageDialog
+              key="new-message"
+              patients={patientList.map((patient) => patient.name)}
+              to={composing.to}
+              onSend={sendMessage}
+              onClose={() => setComposing(null)}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {openSent && (
+            <SentMessageDialog key={openSent.id} message={openSent} onClose={() => setOpenSentId(null)} />
           )}
         </AnimatePresence>
 
