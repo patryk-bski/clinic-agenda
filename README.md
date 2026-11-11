@@ -62,7 +62,7 @@ Dart is a design and front-end prototype of the software a general practitioner 
 - [Tailwind CSS](https://tailwindcss.com) for styling, with custom design tokens
 - [Lucide](https://lucide.dev) icons
 - [Motion](https://motion.dev) for transitions
-- Designed by me, coded with the help of [Claude Code](https://claude.com/claude-code). Every change went through its own branch and pull request: see the [merged pull requests](https://github.com/patryk-bski/clinic-agenda/pulls?q=is%3Apr+is%3Amerged).
+- Designed by me, coded with the help of [Claude Code](https://claude.com/claude-code). Every change went through its own branch and pull request: see the [merged pull requests](https://github.com/patryk-bski/dart-clinic/pulls?q=is%3Apr+is%3Amerged).
 
 ---
 
@@ -71,8 +71,8 @@ Dart is a design and front-end prototype of the software a general practitioner 
 You need [Node.js](https://nodejs.org) (LTS version).
 
 ```bash
-git clone https://github.com/patryk-bski/clinic-agenda.git
-cd clinic-agenda
+git clone https://github.com/patryk-bski/dart-clinic.git
+cd dart-clinic
 npm install
 npm run dev
 ```
