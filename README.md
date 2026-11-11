@@ -88,7 +88,6 @@ Then open the address shown in the terminal (usually http://localhost:5173).
 - [x] Patient records linked from the Agenda
 - [x] Billing with invoices, payments and reminders
 - [x] Weekly reports
-- [ ] **Finish consultation with AI**: draft the visit note from quick bullet points, suggest the invoice for that visit and propose a follow-up appointment. Every suggestion is marked as AI-generated and editable, and nothing is saved without the clinician confirming.
 - [ ] **Quick search** with `Ctrl+K` to jump to any patient, appointment, invoice or action.
 
 ---
