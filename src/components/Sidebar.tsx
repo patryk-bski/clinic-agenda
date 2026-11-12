@@ -1,8 +1,9 @@
-import { BarChart3, Calendar, Inbox, Receipt, Settings, Users } from 'lucide-react'
+import { BarChart3, Calendar, Inbox, Receipt, Search, Settings, Users } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Fragment } from 'react'
 import { entrance } from '../motion'
 import { pageLinks, type Page } from '../navigation'
+import { searchShortcut } from '../search'
 import Logo from './Logo'
 
 const navItems: { label: string; icon: typeof Calendar; page: Page }[] = [
@@ -19,9 +20,16 @@ type Props = {
   clinicianName: string
   specialty: string
   unreadCount: number
+  onSearch: () => void
 }
 
-export default function Sidebar({ currentPage, clinicianName, specialty, unreadCount }: Props) {
+export default function Sidebar({
+  currentPage,
+  clinicianName,
+  specialty,
+  unreadCount,
+  onSearch,
+}: Props) {
   return (
     // A floating panel pinned to the window: 8px clear of the top, bottom and left edges,
     // it stays put while the page content scrolls. When the app opens it fades in, drifting
@@ -32,6 +40,20 @@ export default function Sidebar({ currentPage, clinicianName, specialty, unreadC
     >
       <div className="px-5 pt-5 pb-4">
         <Logo className="block h-6 w-auto" />
+      </div>
+
+      {/* Search everything. It looks like a search box, and shows its keyboard shortcut so
+          people learn they can press it from anywhere. */}
+      <div className="px-2 pb-3">
+        <button
+          onClick={onSearch}
+          aria-keyshortcuts="Control+K Meta+K"
+          className="flex w-full items-center gap-2 rounded-md border border-line bg-white px-3 py-1.5 text-sm text-muted transition-colors hover:border-field hover:text-ink"
+        >
+          <Search size={15} strokeWidth={1.75} aria-hidden />
+          Search
+          <kbd className="ml-auto font-sans text-xs text-muted">{searchShortcut}</kbd>
+        </button>
       </div>
 
       <nav className="flex-1 space-y-0.5 px-2">
