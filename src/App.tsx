@@ -28,7 +28,7 @@ import {
 } from './data'
 import { sentEntries, type SentEntry } from './inbox'
 import { todayIso } from './dates'
-import { fade } from './motion'
+import { entrance, fade } from './motion'
 import { pageLinks, patientLink, useCurrentRoute } from './navigation'
 import { initialNotes, visitHistory, type Note } from './records'
 import { loadSettings, saveSettings, timeSlots } from './settings'
@@ -211,7 +211,8 @@ export default function App() {
 
         {/* min-w-0 lets the content area shrink to the window, so long one-line text is cut off with "…" */}
         <main className="flex min-w-0 flex-1 flex-col px-16 py-14">
-          <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col">
+          {/* When the app opens, the page arrives just after the sidebar: a fade and a 6px rise */}
+          <motion.div {...entrance(0.12)} className="mx-auto flex w-full max-w-4xl flex-1 flex-col">
             {/* Crossfade between screens */}
             <AnimatePresence mode="wait" initial={false}>
               <motion.div key={`${page}-${route.patientId ?? ''}`} className="flex flex-1 flex-col" {...fade}>
@@ -283,7 +284,7 @@ export default function App() {
                 )}
               </motion.div>
             </AnimatePresence>
-          </div>
+          </motion.div>
         </main>
 
         {/* AnimatePresence keeps a closing popup on screen until its exit animation finishes */}
