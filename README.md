@@ -47,7 +47,8 @@ Booking, editing, deleting, sending and adding all confirm with a short note at 
 
 **Calm over clever.** Clinicians sit in this app for eight hours. Warm off-white backgrounds, near-black text, thin dividers and no heavy shadows keep it easy on the eyes. Color is saved for meaning.
 
-**Black as the brand color.** Most health products default to "hospital blue". Dart uses near-black (`#181818`) for primary actions, so the interface feels confident and neutral, and the only colors on screen are the ones that carry information.
+**Black for primary actions.** Instead of the usual clinical blue, the main buttons use near-black (
+#181818), so the interface feels confident and neutral, and the only colors on screen are the ones that carry information.
 
 **Color means status, never decoration.** Green, amber and red are reserved for appointment status and flagged lab values. Status is never shown by color alone: every badge and filter also has a label or an icon.
 
