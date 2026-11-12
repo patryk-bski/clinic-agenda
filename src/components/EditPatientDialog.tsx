@@ -28,7 +28,8 @@ function openPicker(e: MouseEvent<HTMLInputElement>) {
 function readPatientForm(form: HTMLFormElement): Omit<Patient, 'id'> {
   const data = new FormData(form)
   return {
-    name: String(data.get('name')).trim(),
+    // Extra spaces are tidied, so "James  Carter" can't slip past the duplicate check
+    name: String(data.get('name')).trim().replace(/\s+/g, ' '),
     dateOfBirth: String(data.get('dateOfBirth')),
     phone: String(data.get('phone')).trim(),
     lastVisit: String(data.get('lastVisit')),
@@ -37,12 +38,21 @@ function readPatientForm(form: HTMLFormElement): Omit<Patient, 'id'> {
 
 type Props = {
   patient: Patient
+  otherNames: string[] // the other patients' names, which this one can't take
   onSave: (changes: Omit<Patient, 'id'>) => void
   onDelete: () => void
   onClose: () => void
 }
 
-export default function EditPatientDialog({ patient, onSave, onDelete, onClose }: Props) {
+export default function EditPatientDialog({ patient, otherNames, onSave, onDelete, onClose }: Props) {
+  const taken = new Set(otherNames.map((name) => name.trim().toLowerCase()))
+
+  // Appointments, messages and invoices find a patient by name, so two patients can't share one
+  function checkName(input: HTMLInputElement) {
+    input.setCustomValidity(
+      taken.has(input.value.trim().toLowerCase()) ? 'A patient with this name already exists' : '',
+    )
+  }
   const formRef = useRef<HTMLFormElement>(null)
   // What the form shows; holds unsaved edits while the delete question is on screen
   const [draft, setDraft] = useState<Omit<Patient, 'id'>>(patient)
@@ -56,6 +66,10 @@ export default function EditPatientDialog({ patient, onSave, onDelete, onClose }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    // Check the name again on save too: after "Keep patient" the field is refilled without typing
+    const nameInput = e.currentTarget.elements.namedItem('name') as HTMLInputElement
+    checkName(nameInput)
+    if (!nameInput.reportValidity()) return
     onSave(readPatientForm(e.currentTarget))
   }
 
@@ -119,6 +133,7 @@ export default function EditPatientDialog({ patient, onSave, onDelete, onClose }
                     pattern=".*\S.*"
                     title="Enter the patient's name"
                     defaultValue={draft.name}
+                    onInput={(e) => checkName(e.currentTarget)}
                     className={fieldClass}
                   />
                 </label>
