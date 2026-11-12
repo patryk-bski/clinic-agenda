@@ -1,5 +1,7 @@
 import { BarChart3, Calendar, Inbox, Receipt, Settings, Users } from 'lucide-react'
+import { motion } from 'motion/react'
 import { Fragment } from 'react'
+import { entrance } from '../motion'
 import { pageLinks, type Page } from '../navigation'
 import Logo from './Logo'
 
@@ -22,8 +24,12 @@ type Props = {
 export default function Sidebar({ currentPage, clinicianName, specialty, unreadCount }: Props) {
   return (
     // A floating panel pinned to the window: 8px clear of the top, bottom and left edges,
-    // it stays put while the page content scrolls
-    <aside className="sticky top-2 my-2 ml-2 flex h-[calc(100vh-1rem)] w-60 shrink-0 flex-col overflow-y-auto rounded-lg border border-line bg-sidebar">
+    // it stays put while the page content scrolls. When the app opens it fades in, drifting
+    // a few pixels in from the left.
+    <motion.aside
+      {...entrance(0, { x: -6 })}
+      className="sticky top-2 my-2 ml-2 flex h-[calc(100vh-1rem)] w-60 shrink-0 flex-col overflow-y-auto rounded-lg border border-line bg-sidebar"
+    >
       <div className="px-5 pt-5 pb-4">
         <Logo className="block h-6 w-auto" />
       </div>
@@ -68,6 +74,6 @@ export default function Sidebar({ currentPage, clinicianName, specialty, unreadC
         <div className="font-medium">{clinicianName.trim() || 'Your name'}</div>
         {specialty.trim() && <div className="text-muted">{specialty}</div>}
       </div>
-    </aside>
+    </motion.aside>
   )
 }
