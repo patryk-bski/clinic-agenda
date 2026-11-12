@@ -18,11 +18,16 @@ Dart is a design and front-end prototype of the software a general practitioner 
 | --- | --- |
 | **Agenda** | Switch between a day view and a Monday-to-Friday week view, move to the previous or next day or week, or jump to any date. Filter by status (confirmed, waiting, cancelled), search by patient or type, and book, edit or delete appointments. A clear empty state when the day is free. |
 | **Inbox** | Patient messages, lab results and referral letters in one list, filtered by kind. Out-of-range lab values are flagged. Reply to messages and letters, message the patient about a result, or write a new message. A Sent tab keeps everything you've sent, and the sidebar shows the unread count. |
-| **Patients** | A sortable table (name, age, last visit) with search. Add new patients, and open any patient's record. |
+| **Patients** | A sortable table (name, age, last visit) with search. Add new patients, and open any patient's record. Renaming a patient keeps their appointments, messages and invoices linked, and two patients can't share a name. |
 | **Patient record** | Everything about one patient on one page: last visit, next appointment and balance at the top, then upcoming appointments, clinical notes, past visits, inbox items and messages, and invoices. Add notes, edit details, send a message or book an appointment from the record. Patient names in the Agenda link here. |
 | **Billing** | Outstanding, overdue and recently paid totals at a glance. Invoices filtered by status (unpaid, overdue, paid) and searchable by patient or invoice number. Create invoices, mark them as paid with a payment method, and send payment reminders. |
-| **Reports** | "This week" at a glance: appointments per day by outcome, busiest hours, revenue by appointment type. Every chart can be switched to a table. |
+| **Reports** | Any week at a glance, from this week back: revenue, appointments per day by outcome, no-shows, busiest hours and revenue by appointment type. Step between weeks or pick one from a calendar. Every chart can be switched to a table. |
 | **Settings** | Clinician name and specialty, working hours and appointment length. Changes only apply when you press Save, and can be discarded. Bookable times in the Agenda follow these settings, and they're remembered in the browser. |
+| **Search** | Press `Ctrl+K` (`⌘K` on a Mac) or use the search box in the sidebar to find any patient, appointment, invoice or inbox item, or to jump to an action or screen. Accents and word order don't matter, and it works entirely from the keyboard. |
+
+Booking, editing, deleting, sending and adding all confirm with a short note at the bottom of the screen, with an **Undo** button that puts things back exactly as they were.
+
+![Search everything, open over the Agenda](docs/screenshots/search.png)
 
 | Patient record | Billing |
 | --- | --- |
@@ -49,6 +54,10 @@ Dart is a design and front-end prototype of the software a general practitioner 
 **Rows, not cards.** Appointments, patients and invoices are lists you scan, so they're shown as rows with aligned columns. Cards would fit fewer items on screen and make comparing harder. The week view is the exception: there, small cards per day show how the week is filling up.
 
 **The patient is the center.** Every screen leads back to the patient record, and the record pulls in what the other screens hold: appointments, messages, results and invoices. A clinician shouldn't have to visit four screens to prepare for one consultation.
+
+**Undo instead of "Are you sure?".** Booking, saving, sending and adding happen straight away and then offer Undo for a few seconds. A confirmation question slows down every action to guard against the rare mistake; Undo keeps the everyday path fast and still makes mistakes easy to fix. Deleting is the one action that asks first as well, because it's the one people regret most.
+
+**Keyboard first.** `Ctrl+K` reaches any patient, appointment, invoice or screen from anywhere, and search is driven with ↑ ↓, Enter and Esc. The shortcut is printed on the sidebar's search box, so people learn it while using the mouse.
 
 **Accessible by default.** All text meets WCAG AA contrast (4.5:1), fields and icons meet 3:1, every action works with the keyboard with a visible focus ring, charts have a table view, and animations are reduced for people who turn them off in their system settings.
 
@@ -87,8 +96,11 @@ Then open the address shown in the terminal (usually http://localhost:5173).
 - [x] Inbox with replies and a Sent tab
 - [x] Patient records linked from the Agenda
 - [x] Billing with invoices, payments and reminders
-- [x] Weekly reports
-- [ ] **Quick search** with `Ctrl+K` to jump to any patient, appointment, invoice or action.
+- [x] Weekly reports, with past weeks
+- [x] Search everything with `Ctrl+K`
+- [x] Undo after every change
+- [ ] **Phones and small screens:** a collapsible sidebar and lists that stack into cards.
+- [ ] **Reset demo data** from Settings, to start a demo fresh.
 
 ---
 
