@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, MotionConfig } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import AgendaPage, { type AgendaView } from './components/AgendaPage'
 import BillingPage from './components/billing/BillingPage'
 import InvoiceDialog from './components/billing/InvoiceDialog'
@@ -17,6 +17,7 @@ import PatientRecordPage from './components/PatientRecordPage'
 import PatientsPage from './components/PatientsPage'
 import SettingsPage from './components/SettingsPage'
 import Sidebar from './components/Sidebar'
+import Toast, { type ToastMessage } from './components/Toast'
 import { sampleInvoices, type Invoice } from './billing'
 import {
   inboxItems,
@@ -27,7 +28,7 @@ import {
   type SentMessage,
 } from './data'
 import { sentEntries, type SentEntry } from './inbox'
-import { todayIso } from './dates'
+import { shortDayName, todayIso } from './dates'
 import { entrance, fade } from './motion'
 import { pageLinks, patientLink, useCurrentRoute } from './navigation'
 import { initialNotes, visitHistory, type Note } from './records'
@@ -52,6 +53,13 @@ export default function App() {
   // Today's date, read once when the app opens
   const [today] = useState(todayIso)
 
+  // The note at the bottom confirming the last action ("Appointment booked · Undo").
+  // A new one replaces the old one; `undo` puts things back the way they were.
+  const [toast, setToast] = useState<ToastMessage | null>(null)
+  const notify = (text: string, undo?: () => void) => setToast({ id: Date.now(), text, undo })
+  // Stable, so the note's 5-second timer isn't restarted every time the app redraws
+  const dismissToast = useCallback(() => setToast(null), [])
+
   // The agenda starts with the fake data; bookings and edits are kept here (until the page reloads).
   // They live in App, not AgendaPage, so they survive switching to Patients and back.
   const [appointmentList, setAppointmentList] = useState(() => sampleAppointments(today).sort(byDateTime))
@@ -65,20 +73,37 @@ export default function App() {
   const selected = appointmentList.find((appt) => appt.id === selectedId)
 
   function bookAppointment(appointment: Omit<Appointment, 'id'>) {
-    setAppointmentList((list) => [...list, { ...appointment, id: Date.now() }].sort(byDateTime))
+    const id = Date.now()
+    setAppointmentList((list) => [...list, { ...appointment, id }].sort(byDateTime))
     setBooking(null)
+    // e.g. "Booked Sofia Rossi, today at 15:30" or "…, Fri 20 Nov at 09:00"
+    const day = shortDayName(appointment.date, today)
+    notify(
+      `Booked ${appointment.patient}, ${day === 'Today' || day === 'Tomorrow' ? day.toLowerCase() : day} at ${appointment.time}`,
+      () => setAppointmentList((list) => list.filter((appt) => appt.id !== id)),
+    )
   }
 
+  // Puts an appointment back as it was (after an edit or a delete)
+  const restoreAppointment = (previous: Appointment) =>
+    setAppointmentList((list) =>
+      [...list.filter((appt) => appt.id !== previous.id), previous].sort(byDateTime),
+    )
+
   function updateAppointment(id: number, changes: Omit<Appointment, 'id'>) {
+    const previous = appointmentList.find((appt) => appt.id === id)
     setAppointmentList((list) =>
       list.map((appt) => (appt.id === id ? { ...changes, id } : appt)).sort(byDateTime),
     )
     setSelectedId(null)
+    if (previous) notify('Appointment saved', () => restoreAppointment(previous))
   }
 
   function deleteAppointment(id: number) {
+    const previous = appointmentList.find((appt) => appt.id === id)
     setAppointmentList((list) => list.filter((appt) => appt.id !== id))
     setSelectedId(null)
+    if (previous) notify('Appointment deleted', () => restoreAppointment(previous))
   }
 
   // Patients work the same way: edits are kept here until the page reloads
@@ -87,10 +112,19 @@ export default function App() {
   const selectedPatient = patientList.find((patient) => patient.id === selectedPatientId)
 
   function updatePatient(id: number, changes: Omit<Patient, 'id'>) {
-    const oldName = patientList.find((patient) => patient.id === id)?.name
-    setPatientList((list) => list.map((patient) => (patient.id === id ? { ...changes, id } : patient)))
-    if (oldName && oldName !== changes.name) renamePatientEverywhere(oldName, changes.name)
+    const previous = patientList.find((patient) => patient.id === id)
+    if (!previous) return
+    const replace = (with_: Patient) =>
+      setPatientList((list) => list.map((patient) => (patient.id === id ? with_ : patient)))
+    replace({ ...changes, id })
+    const renamed = previous.name !== changes.name
+    if (renamed) renamePatientEverywhere(previous.name, changes.name)
     setSelectedPatientId(null)
+    // Undo also changes the name back everywhere it was copied to
+    notify('Patient details saved', () => {
+      replace(previous)
+      if (renamed) renamePatientEverywhere(changes.name, previous.name)
+    })
   }
 
   // Appointments, inbox items, sent messages and invoices store the patient's name, so a rename
@@ -120,13 +154,28 @@ export default function App() {
     setIsAddingPatient(false)
     // Open the new patient's record straight away, ready to book or add notes
     window.location.hash = patientLink(id)
+    notify(`Added ${patient.name}`, () => {
+      setPatientList((list) => list.filter((p) => p.id !== id))
+      // Undone while on their record: go back to the list rather than an empty page
+      if (window.location.hash === patientLink(id)) window.location.hash = pageLinks.patients
+    })
   }
 
   function deletePatient(id: number) {
+    const index = patientList.findIndex((patient) => patient.id === id)
+    const previous = patientList[index]
     setPatientList((list) => list.filter((patient) => patient.id !== id))
     setSelectedPatientId(null)
     // Deleted from their own record: go back to the patient list
-    if (route.patientId === id) window.location.hash = pageLinks.patients
+    const wasOnRecord = route.patientId === id
+    if (wasOnRecord) window.location.hash = pageLinks.patients
+    if (!previous) return
+    // Their appointments, messages and notes were never removed, so putting the patient back
+    // reconnects everything. Undo also returns to their record if that's where you were.
+    notify(`Deleted ${previous.name}`, () => {
+      setPatientList((list) => [...list.slice(0, index), previous, ...list.slice(index)])
+      if (wasOnRecord) window.location.hash = patientLink(id)
+    })
   }
 
   // The patient whose record is open, if any
@@ -141,11 +190,19 @@ export default function App() {
 
   // Clinical notes per patient id, kept here until the page reloads
   const [notes, setNotes] = useState(initialNotes)
-  const addNote = (patientId: number, text: string) =>
+  function addNote(patientId: number, text: string) {
+    const id = Date.now()
     setNotes((all) => ({
       ...all,
-      [patientId]: [...(all[patientId] ?? []), { id: Date.now(), text, written: new Date() } satisfies Note],
+      [patientId]: [...(all[patientId] ?? []), { id, text, written: new Date() } satisfies Note],
     }))
+    notify('Note added', () =>
+      setNotes((all) => ({
+        ...all,
+        [patientId]: (all[patientId] ?? []).filter((note) => note.id !== id),
+      })),
+    )
+  }
 
   // Inbox: opening an item marks it as read; read/unread is kept here until the page reloads.
   // The clock is read once, so "received" times don't shift while the app is open.
@@ -161,6 +218,16 @@ export default function App() {
   function openInboxItem(id: number) {
     setRead(id, true)
     setOpenItemId(id)
+  }
+
+  function markAllRead() {
+    const unreadIds = inbox.filter((item) => !item.read).map((item) => item.id)
+    setInbox((list) => list.map((item) => ({ ...item, read: true })))
+    notify(`Marked ${unreadIds.length} as read`, () =>
+      setInbox((list) =>
+        list.map((item) => (unreadIds.includes(item.id) ? { ...item, read: false } : item)),
+      ),
+    )
   }
 
   function markUnread(id: number) {
@@ -188,8 +255,12 @@ export default function App() {
   const sent = sentEntries(inbox, sentMessages)
 
   function sendMessage(message: Omit<SentMessage, 'id' | 'sentAt'>) {
-    setSentMessages((list) => [...list, { ...message, id: Date.now(), sentAt: new Date() }])
+    const id = Date.now()
+    setSentMessages((list) => [...list, { ...message, id, sentAt: new Date() }])
     setComposing(null)
+    notify(`Message sent to ${message.to}`, () =>
+      setSentMessages((list) => list.filter((sentMessage) => sentMessage.id !== id)),
+    )
   }
 
   // A sent row opens the message itself, or for a reply the inbox item it answers
@@ -246,7 +317,7 @@ export default function App() {
                     now={now}
                     onOpen={(item) => openInboxItem(item.id)}
                     onOpenSent={openSentEntry}
-                    onMarkAllRead={() => setInbox((list) => list.map((item) => ({ ...item, read: true })))}
+                    onMarkAllRead={markAllRead}
                     onNewMessage={() => setComposing({})}
                   />
                 ) : page === 'billing' ? (
@@ -424,6 +495,8 @@ export default function App() {
             />
           )}
         </AnimatePresence>
+
+        <Toast toast={toast} onDismiss={dismissToast} />
       </div>
     </MotionConfig>
   )
