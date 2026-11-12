@@ -1,7 +1,8 @@
-// Weekly practice report: appointments for this week (Monday to Friday) and the numbers the
-// Reports screen shows. Today's appointments come from the agenda; the other days are made up
-// (generated, so they always fit the current week).
+// Weekly practice report: appointments for one week (Monday to Friday) and the numbers the
+// Reports screen shows. In the current week, today's appointments come from the agenda; every
+// other day is made up (generated, so any week can be shown).
 import type { Appointment } from './data'
+import { isoDate, mondayOf } from './dates'
 
 export type Outcome = 'seen' | 'no-show' | 'cancelled' | 'upcoming'
 
@@ -40,11 +41,15 @@ const bookingChance: Record<number, number> = {
   8: 0.5, 9: 0.75, 10: 0.95, 11: 0.85, 12: 0.4, 13: 0.45, 14: 0.65, 15: 0.7, 16: 0.55, 17: 0.3,
 }
 
-// Other days are generated; today comes from the agenda, so Reports and the agenda always agree
-function generateWeek(now: Date, todaysAppointments: Appointment[]): WeekAppointment[] {
-  const random = seededRandom(42)
+// Days are generated; in the current week today comes from the agenda, so Reports and the agenda agree.
+// `monday` (YYYY-MM-DD) picks the week: each week has its own seed, so it always looks the same.
+function generateWeek(now: Date, monday: string, todaysAppointments: Appointment[]): WeekAppointment[] {
+  const random = seededRandom(Number(monday.replaceAll('-', ''))) // e.g. 20261109
   const types = Object.keys(fees)
-  const today = (now.getDay() + 6) % 7 // 0 = Monday … 6 = Sunday
+  const isCurrentWeek = monday === mondayOf(isoDate(now))
+  // Which weekday is today (0 = Monday … 6 = Sunday). In a past week every day has already
+  // happened, so "today" is treated as after Sunday.
+  const today = isCurrentWeek ? (now.getDay() + 6) % 7 : 7
   const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
   const week: WeekAppointment[] = []
@@ -82,8 +87,9 @@ function generateWeek(now: Date, todaysAppointments: Appointment[]): WeekAppoint
   return week
 }
 
-export function weeklyReport(now: Date, todaysAppointments: Appointment[]) {
-  const week = generateWeek(now, todaysAppointments)
+// The report for the week starting `monday` (YYYY-MM-DD): the current week or an earlier one
+export function weeklyReport(now: Date, monday: string, todaysAppointments: Appointment[]) {
+  const week = generateWeek(now, monday, todaysAppointments)
   const count = (outcome: Outcome) => week.filter((appt) => appt.outcome === outcome).length
   // Cancelled appointments don't take up the clinician's time, so they're left out of totals
   const scheduled = week.filter((appt) => appt.outcome !== 'cancelled')
