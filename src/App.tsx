@@ -87,8 +87,28 @@ export default function App() {
   const selectedPatient = patientList.find((patient) => patient.id === selectedPatientId)
 
   function updatePatient(id: number, changes: Omit<Patient, 'id'>) {
+    const oldName = patientList.find((patient) => patient.id === id)?.name
     setPatientList((list) => list.map((patient) => (patient.id === id ? { ...changes, id } : patient)))
+    if (oldName && oldName !== changes.name) renamePatientEverywhere(oldName, changes.name)
     setSelectedPatientId(null)
+  }
+
+  // Appointments, inbox items, sent messages and invoices store the patient's name, so a rename
+  // is copied to all of them; otherwise they'd lose their link to the patient's record.
+  // (Names are unique: New patient and Edit patient both refuse a name that's already taken.)
+  function renamePatientEverywhere(oldName: string, newName: string) {
+    const rename = (name: string) => (name === oldName ? newName : name)
+    setAppointmentList((list) => list.map((appt) => ({ ...appt, patient: rename(appt.patient) })))
+    setInbox((list) =>
+      list.map((item) => ({
+        ...item,
+        patient: rename(item.patient),
+        from: rename(item.from), // a message the patient sent
+        replies: item.replies?.map((reply) => ({ ...reply, to: rename(reply.to) })),
+      })),
+    )
+    setSentMessages((list) => list.map((message) => ({ ...message, to: rename(message.to) })))
+    setInvoices((list) => list.map((invoice) => ({ ...invoice, patient: rename(invoice.patient) })))
   }
 
   // "New patient" on the Patients screen
@@ -112,7 +132,8 @@ export default function App() {
   // The patient whose record is open, if any
   const recordPatient = patientList.find((patient) => patient.id === route.patientId)
 
-  // Appointments, inbox items and invoices store the patient's name; this finds their record
+  // Appointments, inbox items and invoices store the patient's name; this finds their record.
+  // It keeps working after a rename because renamePatientEverywhere updates those names too.
   const patientHref = (name: string) => {
     const patient = patientList.find((p) => p.name === name)
     return patient && patientLink(patient.id)
@@ -321,6 +342,8 @@ export default function App() {
             <EditPatientDialog
               key={selectedPatient.id}
               patient={selectedPatient}
+              // Everyone else's names: keeping your own name is fine
+              otherNames={patientList.filter((p) => p.id !== selectedPatient.id).map((p) => p.name)}
               onSave={(changes) => updatePatient(selectedPatient.id, changes)}
               onDelete={() => deletePatient(selectedPatient.id)}
               onClose={() => setSelectedPatientId(null)}
