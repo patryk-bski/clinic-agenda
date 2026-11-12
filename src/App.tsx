@@ -16,6 +16,7 @@ import SentMessageDialog from './components/SentMessageDialog'
 import PatientRecordPage from './components/PatientRecordPage'
 import PatientsPage from './components/PatientsPage'
 import SettingsPage from './components/SettingsPage'
+import SearchDialog from './components/SearchDialog'
 import Sidebar from './components/Sidebar'
 import Toast, { type ToastMessage } from './components/Toast'
 import { sampleInvoices, type Invoice } from './billing'
@@ -28,6 +29,7 @@ import {
   type SentMessage,
 } from './data'
 import { sentEntries, type SentEntry } from './inbox'
+import type { SearchTarget } from './search'
 import { shortDayName, todayIso } from './dates'
 import { entrance, fade } from './motion'
 import { pageLinks, patientLink, useCurrentRoute } from './navigation'
@@ -290,6 +292,51 @@ export default function App() {
     setOpenInvoiceId(id) // show the new invoice straight away
   }
 
+  // Search everything: opened from the sidebar, or with Ctrl+K (⌘K on a Mac) from anywhere
+  const [isSearching, setIsSearching] = useState(false)
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'k') return
+      e.preventDefault() // the browser would otherwise jump to its own address bar search
+      setIsSearching((open) => {
+        if (open) return false // pressing it again closes search
+        // Don't open over another popup, e.g. while you're halfway through booking
+        return !document.querySelector('dialog[open]')
+      })
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  // Opens whatever was picked in search
+  function openSearchResult(target: SearchTarget) {
+    setIsSearching(false)
+    switch (target.kind) {
+      case 'page':
+        window.location.hash = pageLinks[target.page]
+        break
+      case 'patient':
+        window.location.hash = patientLink(target.id)
+        break
+      case 'appointment':
+        setSelectedId(target.id)
+        break
+      case 'invoice':
+        setOpenInvoiceId(target.id)
+        break
+      case 'inbox':
+        openInboxItem(target.id)
+        break
+      case 'action':
+        if (target.action === 'book') setBooking({ date: agendaDate })
+        if (target.action === 'new-patient') setIsAddingPatient(true)
+        if (target.action === 'new-message') setComposing({})
+        if (target.action === 'new-invoice') setIsCreatingInvoice(true)
+        break
+    }
+  }
+
   return (
     // reducedMotion="user": people who turn off animations in their system settings get only simple fades
     <MotionConfig reducedMotion="user">
@@ -299,6 +346,7 @@ export default function App() {
           clinicianName={settings.clinicianName}
           specialty={settings.specialty}
           unreadCount={unreadCount}
+          onSearch={() => setIsSearching(true)}
         />
 
         {/* min-w-0 lets the content area shrink to the window, so long one-line text is cut off with "…" */}
@@ -492,6 +540,24 @@ export default function App() {
               patientNames={patientList.map((patient) => patient.name)}
               onCreate={createInvoice}
               onClose={() => setIsCreatingInvoice(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isSearching && (
+            <SearchDialog
+              key="search"
+              data={{
+                patients: patientList,
+                appointments: appointmentList,
+                invoices,
+                inboxItems: inbox,
+                today,
+                now,
+              }}
+              onChoose={openSearchResult}
+              onClose={() => setIsSearching(false)}
             />
           )}
         </AnimatePresence>

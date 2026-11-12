@@ -6,11 +6,15 @@ type Props = {
   labelledBy: string
   onClose: () => void
   children: ReactNode
+  // "search": wider, near the top of the screen and without inner padding, for Search everything.
+  // Forms use the default: a narrower box in the middle of the screen.
+  variant?: 'form' | 'search'
 }
 
 // A centered popup over a dimmed page. Closes on Escape or a click outside the box.
 // Render it inside <AnimatePresence> so it can animate out before it's removed.
-export default function Modal({ labelledBy, onClose, children }: Props) {
+export default function Modal({ labelledBy, onClose, children, variant = 'form' }: Props) {
+  const isSearch = variant === 'search'
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   // showModal() keeps focus inside the popup and makes the page behind it unclickable
@@ -48,16 +52,22 @@ export default function Modal({ labelledBy, onClose, children }: Props) {
         transition={transition}
       />
 
-      <div className="pointer-events-none fixed inset-0 flex items-center justify-center p-4">
+      <div
+        className={`pointer-events-none fixed inset-0 flex justify-center p-4 ${
+          isSearch ? 'items-start pt-[12vh]' : 'items-center'
+        }`}
+      >
         <motion.div
-          className="pointer-events-auto w-full max-w-md rounded-lg border border-line bg-page text-ink shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
+          className={`pointer-events-auto w-full rounded-lg border border-line bg-page text-ink shadow-[0_8px_30px_rgba(0,0,0,0.08)] ${
+            isSearch ? 'max-w-xl' : 'max-w-md'
+          }`}
           initial={{ opacity: 0, scale: 0.97, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.97, y: 8 }}
           transition={transition}
         >
           <AnimatedHeight>
-            <div className="p-6">{children}</div>
+            <div className={isSearch ? '' : 'p-6'}>{children}</div>
           </AnimatedHeight>
         </motion.div>
       </div>
