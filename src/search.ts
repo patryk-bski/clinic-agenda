@@ -73,9 +73,12 @@ function rank(results: SearchResult[], words: string[]) {
   return [...results.filter(startsWith), ...results.filter((r) => !startsWith(r))]
 }
 
-// The keyboard shortcut as people know it on their computer: ⌘K on a Mac, Ctrl K elsewhere
+// The keyboard shortcut as people know it on their computer, one entry per key:
+// ⌘ K on a Mac, Ctrl K elsewhere
 export const searchShortcut =
-  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘K' : 'Ctrl K'
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
+    ? ['⌘', 'K']
+    : ['Ctrl', 'K']
 
 export type SearchData = {
   patients: Patient[]
