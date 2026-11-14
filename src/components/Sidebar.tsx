@@ -4,6 +4,7 @@ import { Fragment } from 'react'
 import { entrance } from '../motion'
 import { pageLinks, type Page } from '../navigation'
 import { searchShortcut } from '../search'
+import Kbd from './Kbd'
 import Logo from './Logo'
 
 const navItems: { label: string; icon: typeof Calendar; page: Page }[] = [
@@ -52,7 +53,11 @@ export default function Sidebar({
         >
           <Search size={15} strokeWidth={1.75} aria-hidden />
           Search
-          <kbd className="ml-auto font-sans text-xs text-muted">{searchShortcut}</kbd>
+          <span className="ml-auto flex gap-0.5">
+            {searchShortcut.map((key) => (
+              <Kbd key={key}>{key}</Kbd>
+            ))}
+          </span>
         </button>
       </div>
 

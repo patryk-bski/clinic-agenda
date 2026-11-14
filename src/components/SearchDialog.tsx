@@ -25,6 +25,7 @@ import {
   type SearchResult,
   type SearchTarget,
 } from '../search'
+import Kbd from './Kbd'
 import Modal from './Modal'
 
 // The same icons as the sidebar and the buttons these results stand for
@@ -214,14 +215,18 @@ export default function SearchDialog({ data, onChoose, onClose }: Props) {
 
       {/* How to use it without a mouse */}
       <div className="flex gap-4 border-t border-line px-4 py-2.5 text-xs text-muted">
-        <span>
-          <kbd className="font-sans">↑</kbd> <kbd className="font-sans">↓</kbd> to move
+        <span className="flex items-center gap-1">
+          <Kbd>↑</Kbd>
+          <Kbd>↓</Kbd>
+          <span className="ml-0.5">to move</span>
         </span>
-        <span>
-          <kbd className="font-sans">Enter</kbd> to open
+        <span className="flex items-center gap-1">
+          <Kbd>Enter</Kbd>
+          <span className="ml-0.5">to open</span>
         </span>
-        <span>
-          <kbd className="font-sans">Esc</kbd> to close
+        <span className="flex items-center gap-1">
+          <Kbd>Esc</Kbd>
+          <span className="ml-0.5">to close</span>
         </span>
       </div>
     </Modal>
